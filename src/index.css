@@ -1,0 +1,77 @@
+/* Base */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Global 80% scale — the "zoomed out" look, baked in.
+     `zoom` re-rasterizes at the smaller size, so text stays crisp
+     (unlike transform: scale). */
+  zoom: 0.8;
+}
+
+body {
+  margin: 0;
+  background-color: #fbf9f5; /* surface / warm off-white */
+  color: #1b1c1a; /* on-surface / charcoal-black */
+  font-family: "Manrope", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar for boutique feel */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #fbf9f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #c2c8c2;
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  vertical-align: middle;
+  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+.item-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hidden scrollbar for the horizontal category filter */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Accordion (controlled by React `active` class) */
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+.accordion-item.active .accordion-content {
+  max-height: 240px;
+}
+.accordion-item.active .chevron {
+  transform: rotate(180deg);
+}

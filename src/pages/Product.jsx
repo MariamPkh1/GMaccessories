@@ -1,96 +1,78 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
-import { CARBON_NIGHT } from '../products'
+import { fmt } from '../products'
 
-const MAIN_IMG =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAsiiksJIKFoiQU_qcjEaf3P92Nhwk1f0ndlNFu5rkFwuVKp4-vImHmubcdgZqiFPiwoVStGBjQd_bFLSdqhF57WyvIJTX4rwfcn2l6i94UfXhKjtNTt2hPvugoKuFZP5V0O5OlvCtu6Se1xoy5caPj6NYq4B-buow6fWmX91BRTxcT3G-OX0qUyhiqfobWnG3OmSYZHejTLIUwTlmpn00ODbWdhRt_XitsNUAaitl-IartaPe4GuIlpg"
+function toEmbedUrl(url) {
+  try {
+    const u = new URL(url)
+    if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) {
+      return `https://www.youtube.com/embed/${u.searchParams.get('v')}`
+    }
+    if (u.hostname.includes('youtu.be')) {
+      return `https://www.youtube.com/embed${u.pathname}`
+    }
+    return url
+  } catch {
+    return url
+  }
+}
 
-const THUMBS = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDqGtehGsI-e6USNnA55CS3JR48F32X3Tl1OVuHYa7DE26YZtMpywCDGLuFI_LMfg5-dd8mPM_uq7qRjoCPKW6GDd0Wj45JWfKvmWYYvG5vSI9iJ_TkadV_WmFA_A554V3x4eobMDV-4mDRrb_rS6UtDfSbo56hnF7UuYRHTI9hYERSbSRmBKwbVRZ8MqYwmfQeSJJyffkGygSMwo3SfNOdTxsHLf5V8TPGrPwh9FF6MK0jzLfzg-K5Tg",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBZLcQBukQOdYMLEX37hNvwuBUe7cF51iE6g1rKpSqzge0stOD1WKGm_HRmzwmeJj5OHHa07SVMaOzIC6qwxJGy75P_zDJdEYWJh2zH4oxZwcj_PzX6m9EIncKCoECMK0OQBvBiuyDJlnPzE1eXxp0j80r8usTTJtVZi-AnYuLyZHPi920335P_bzdYDYxkCbgp4PVeCjlYsWWoPBpg9c1zI9lztNuFq4zFgOcGuCcCx0QbtlC1rhI-MQ",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAl56B8DCo2Qyftf4tuopOnSvFs0UzS2LiqdEcpoczAmHqq3B-zVq8SsGGoWl3W9MWGKi1GibyozMWrLjL0EkRt4728OsxMadxGblSJR8BrCliKtl2IavzQYLXkDznn_82pXuzhjugqmtO533H2pb0T94Fx8RbN7bEAxc02IltZNb26Cwoa4gtdJReeNIN8fMW9VoTuly-p3RtVb4KJ5iOMEGp71lxvhx2zQ8KzgrZ9bqTQLVnnQEbxlQ",
-]
-
-const COLORS = ["#1A1A1A", "#2D4739", "#4A3728"]
-const SIZES = ["M (38cm)", "L (40cm)"]
-const SPECS = [
-  "100% ნატურალური ტყავი",
-  "ანტი-სლიპ ტექსტურა",
-  "მარტივი ინსტალაცია",
-  "UV დაცვა",
-]
-
-const RELATED = [
-  {
-    title: "სალონის მოვლის ნაკრები",
-    price: "85.00 ₾",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAPo7jRHmKVtXQJy6rW6HKYe0ha5W17-KmoHa8L7cZATsx3v5FNeM3FPZjIfWSYbayIYOMZ8ZeoWYoi6VcweKuweEKwR24slySgYo5R3lrfi2GCSfV7X4GXlvNTA3Vjvn-iLaXNTrngNCQhXFWGCtSuQLVg2G8JCRKDWcpKeMBjzrsph3QMpRuEOGsUmhLMQwA5BYUgJ7GCWLmlDqZagLw6SUSScJSGBuZx8-o1SYvwyBktVUxUWm836Q",
-  },
-  {
-    title: 'არომატიზატორი "Elite"',
-    price: "120.00 ₾",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_4lpIJiV6bKUn_KkO6_tg7r9MqQbGo7Cr5c1njtZtn6djC8Gdjwc9-nWGfwckWyv640y1A2pSFwGL63No5uHY50y_o7f4WRFt2tJuDps2hsfc6kAS4dxPFAbPZ7p-ysQxzp0Rop0nsTCYIZT4_uE06hjlGY_V-3d_zBq2jkTGM7qbjHJSaSfexft-AX8arsO5TJhC6UlaNyf8Xp2yjUu8eBSf2mPmiDCiuTMWELMfspMzlsvkx1XifQ",
-  },
-  {
-    title: "ტყავის ნოხების კომპლექტი",
-    price: "450.00 ₾",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuC0_CvkwghDlJBNlU2Krb-jwcTXajpsnnK6Dj2aIp4HKnKCbrseprsHlsn-SCHXASlEvuJCDXJO8vyoZiNmdaQXhJMIZC0_sMszKx84DytFqI0YLhfT8lBaS538kkRbL4NW1jVRAWGfHkDkSXcfl37IaCBWY50Eqkxf3uZHm6RPG3Gw2vcQTyCk0U9RpnRB-_Lhx2i-XnF876Je0VWD-y7V5ovtkkrT1x3YqTV-BNlhDeH87YYSy7jYQQ",
-  },
-  {
-    title: "უსადენო დამტენი",
-    price: "165.00 ₾",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCV8Hpi_TETht5UG-d7qh1QhKceLEnZly2ubuNCCRWU3w3f9T66DwgNo_vtpktyOXcFGGvtwEVU-ho3_w1d-NIbpry2rhXka4TppMIqW_Hu8QhRZgCiOf7saZefCOJm-6g-2Xrp_9Cia0nSETazLTEDTzz45YZznWlAEpcFDsLLcPbf8Kz2skhgZh8s-4M_EqkDjXFwUoDEx2CwlBQLiTEBLzIzfpelqdYDX6HQ50D7y6VTDU006JtQVA",
-  },
-]
-
-function Gallery() {
-  const [mainSrc, setMainSrc] = useState(MAIN_IMG)
+function Gallery({ product }) {
+  const images = product.image_urls?.length ? product.image_urls : ['']
+  const [mainSrc, setMainSrc] = useState(images[0])
   return (
     <div className="lg:col-span-7 grid grid-cols-6 gap-4">
-      <div className="col-span-1 space-y-4">
-        {THUMBS.map((thumb) => (
-          <div
-            key={thumb}
-            onClick={() => setMainSrc(thumb)}
-            className={`aspect-square bg-surface-container border border-outline-variant cursor-pointer overflow-hidden transition-opacity ${
-              mainSrc === thumb
-                ? "opacity-100"
-                : "opacity-60 hover:opacity-100"
-            }`}
-          >
-            <img className="w-full h-full object-cover" src={thumb} alt="" />
-          </div>
-        ))}
-      </div>
-      <div className="col-span-5 relative group">
+      {images.length > 1 && (
+        <div className="col-span-1 space-y-4">
+          {images.map((img, i) => (
+            <div
+              key={i}
+              onClick={() => setMainSrc(img)}
+              className={`aspect-square bg-surface-container border border-outline-variant cursor-pointer overflow-hidden transition-opacity ${
+                mainSrc === img ? "opacity-100" : "opacity-60 hover:opacity-100"
+              }`}
+            >
+              <img className="w-full h-full object-cover" src={img} alt="" loading="lazy" />
+            </div>
+          ))}
+        </div>
+      )}
+      <div className={images.length > 1 ? "col-span-5 relative group" : "col-span-6 relative group"}>
         <div className="aspect-[4/5] bg-surface-container overflow-hidden">
           <img
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             src={mainSrc}
-            alt='პრემიუმ ტყავის საჭის ჩიხოლი "Carbon Night"'
+            alt={product.title_ka}
           />
-          <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-4xl">
-              zoom_in
-            </span>
-          </div>
         </div>
       </div>
+      {product.video_url && (
+        <div className="col-span-6 aspect-video bg-black">
+          <iframe
+            className="w-full h-full"
+            src={toEmbedUrl(product.video_url)}
+            title={product.title_ka}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      )}
     </div>
   )
 }
 
-function Details() {
+function Details({ product }) {
   const { addToCart, toggleFavorite, isFavorite } = useStore()
-  const [color, setColor] = useState(0)
-  const [size, setSize] = useState(0)
+  const hasSizes = product.sizes?.length > 0
+  const hasSpecs = product.specifications?.length > 0
+  const [size, setSize] = useState(hasSizes ? product.sizes[0] : null)
   const [added, setAdded] = useState(false)
   const [specsOpen, setSpecsOpen] = useState(false)
-  const favorited = isFavorite(CARBON_NIGHT.id)
+  const favorited = isFavorite(product.id)
 
   const handleAddToCart = () => {
-    addToCart(CARBON_NIGHT)
+    addToCart(product.id, { size, quantity: 1 })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
@@ -98,76 +80,53 @@ function Details() {
   return (
     <div className="lg:col-span-5 lg:sticky lg:top-28">
       <div className="border-b border-outline-variant pb-8 mb-8">
-        <span className="font-label-sm text-label-sm text-secondary uppercase tracking-[0.2em] block mb-4">
-          Limited Edition
-        </span>
+        {!product.in_stock && (
+          <span className="font-label-sm text-label-sm text-error uppercase tracking-[0.2em] block mb-4">
+            ამოწურულია
+          </span>
+        )}
         <h2 className="font-display-lg text-3xl md:text-headline-lg text-on-surface mb-2 leading-tight tracking-tight">
-          პრემიუმ ტყავის საჭის ჩიხოლი "Carbon Night"
+          {product.title_ka}
         </h2>
-        <p className="font-body-md font-bold text-primary text-xl tracking-tight">
-          245.00 ₾
-        </p>
+        <p className="font-body-md font-bold text-primary text-xl tracking-tight">{fmt(product.price)}</p>
       </div>
 
-      <div className="space-y-6 mb-12">
-        <div className="flex items-center gap-4">
-          <span className="font-label-sm text-label-sm text-on-surface w-24">
-            ფერი:
-          </span>
-          <div className="flex gap-2">
-            {COLORS.map((c, i) => (
-              <button
-                key={c}
-                onClick={() => setColor(i)}
-                style={{ backgroundColor: c }}
-                className={`w-6 h-6 rounded-full ${
-                  color === i
-                    ? "ring-2 ring-primary ring-offset-2"
-                    : "ring-1 ring-outline-variant"
-                }`}
-                aria-label={`color ${c}`}
-              />
-            ))}
+      {hasSizes && (
+        <div className="space-y-6 mb-12">
+          <div className="flex items-center gap-4">
+            <span className="font-label-sm text-label-sm text-on-surface w-24">ზომა:</span>
+            <div className="flex gap-3">
+              {product.sizes.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSize(s)}
+                  className={`font-label-sm text-label-sm px-4 py-1 border transition-colors ${
+                    size === s ? "border-primary text-primary" : "border-outline text-secondary hover:border-primary"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="font-label-sm text-label-sm text-on-surface w-24">
-            ზომა:
-          </span>
-          <div className="flex gap-3">
-            {SIZES.map((s, i) => (
-              <button
-                key={s}
-                onClick={() => setSize(i)}
-                className={`font-label-sm text-label-sm px-4 py-1 border transition-colors ${
-                  size === i
-                    ? "border-primary text-primary"
-                    : "border-outline text-secondary hover:border-primary"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      )}
 
       <div className="flex flex-col gap-4 mb-12">
         <button
           onClick={handleAddToCart}
-          className={`w-full text-on-primary font-button-text text-button-text flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] py-4 ${
+          disabled={!product.in_stock}
+          className={`w-full text-on-primary font-button-text text-button-text flex items-center justify-center gap-3 transition-all duration-300 active:scale-[0.98] py-4 disabled:opacity-40 ${
             added ? "bg-primary" : "bg-primary-container hover:bg-primary"
           }`}
         >
-          <span
-            className={`material-symbols-outlined ${added ? "animate-spin" : ""}`}
-          >
+          <span className={`material-symbols-outlined ${added ? "animate-spin" : ""}`}>
             {added ? "refresh" : "shopping_cart"}
           </span>
           {added ? "დამატებულია" : "კალათაში დამატება"}
         </button>
         <button
-          onClick={() => toggleFavorite(CARBON_NIGHT)}
+          onClick={() => toggleFavorite(product.id)}
           className="w-full border border-outline text-on-surface font-button-text text-button-text flex items-center justify-center gap-3 hover:bg-surface-container-low transition-all duration-300 py-4"
         >
           <span
@@ -182,64 +141,69 @@ function Details() {
 
       <div className="space-y-8">
         <div>
-          <h3 className="font-label-sm text-label-sm text-on-surface uppercase tracking-widest mb-4">
-            აღწერა
-          </h3>
-          <p className="text-on-surface-variant leading-relaxed">
-            დამზადებულია უმაღლესი ხარისხის ნატურალური ტყავისგან, რომელიც
-            უზრუნველყოფს მაქსიმალურ კომფორტს და გამძლეობას. "Carbon Night" სერია
-            გამოირჩევა თავისი დახვეწილი დიზაინითა და ერგონომიული ფორმით. ხელნაკეთი
-            ნაკერები ხაზს უსვამს თქვენი ავტომობილის ინტერიერის ექსკლუზიურობას.
-          </p>
+          <h3 className="font-label-sm text-label-sm text-on-surface uppercase tracking-widest mb-4">აღწერა</h3>
+          <p className="text-on-surface-variant leading-relaxed">{product.description_ka}</p>
         </div>
-        <div className="border-t border-outline-variant pt-6">
-          <button
-            onClick={() => setSpecsOpen((o) => !o)}
-            className="w-full list-none flex justify-between items-center font-label-sm text-label-sm text-on-surface uppercase tracking-widest"
-          >
-            მახასიათებლები
-            <span
-              className={`material-symbols-outlined transition-transform ${
-                specsOpen ? "rotate-180" : ""
-              }`}
+        {hasSpecs && (
+          <div className="border-t border-outline-variant pt-6">
+            <button
+              onClick={() => setSpecsOpen((o) => !o)}
+              className="w-full list-none flex justify-between items-center font-label-sm text-label-sm text-on-surface uppercase tracking-widest"
             >
-              expand_more
-            </span>
-          </button>
-          {specsOpen && (
-            <ul className="mt-4 space-y-2 text-on-surface-variant font-body-md">
-              {SPECS.map((spec) => (
-                <li key={spec} className="flex items-center gap-2">
-                  <span className="w-1 h-1 bg-primary rounded-full" />
-                  {spec}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+              მახასიათებლები
+              <span
+                className={`material-symbols-outlined transition-transform ${specsOpen ? "rotate-180" : ""}`}
+              >
+                expand_more
+              </span>
+            </button>
+            {specsOpen && (
+              <ul className="mt-4 space-y-2 text-on-surface-variant font-body-md">
+                {product.specifications.map((spec) => (
+                  <li key={spec.key} className="flex items-center gap-2">
+                    <span className="w-1 h-1 bg-primary rounded-full" />
+                    <span className="font-bold">{spec.key}:</span> {spec.value}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 function RelatedCard({ item }) {
+  const { toggleFavorite, isFavorite } = useStore()
+  const favorited = isFavorite(item.id)
   return (
-    <div className="group">
+    <a href={`#/product/${item.id}`} className="group block">
       <div className="relative aspect-[3/4] bg-surface-container overflow-hidden mb-4">
         <img
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          src={item.img}
-          alt={item.title}
+          src={item.image_urls?.[0]}
+          alt={item.title_ka}
+          loading="lazy"
         />
-        <button className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="material-symbols-outlined text-[20px]">favorite</span>
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            toggleFavorite(item.id)
+          }}
+          className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <span
+            className="material-symbols-outlined text-[20px]"
+            style={{ fontVariationSettings: favorited ? "'FILL' 1" : "'FILL' 0" }}
+          >
+            favorite
+          </span>
         </button>
       </div>
-      <h4 className="font-label-sm text-label-sm text-on-surface mb-1">
-        {item.title}
-      </h4>
-      <p className="font-body-md text-primary">{item.price}</p>
-    </div>
+      <h4 className="font-label-sm text-label-sm text-on-surface mb-1">{item.title_ka}</h4>
+      <p className="font-body-md text-primary">{fmt(item.price)}</p>
+    </a>
   )
 }
 
@@ -260,6 +224,8 @@ function Footer() {
               key={s}
               className="font-label-sm text-label-sm text-secondary hover:text-primary transition-colors uppercase tracking-widest"
               href="#"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               {s}
             </a>
@@ -277,7 +243,44 @@ function Footer() {
   )
 }
 
-export default function Product() {
+export default function Product({ id }) {
+  const { getProduct, products, productsLoading } = useStore()
+  const product = getProduct(id)
+
+  const related = useMemo(() => {
+    if (!product) return []
+    return products.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 4)
+  }, [products, product])
+
+  if (productsLoading) {
+    return (
+      <>
+        <SiteNav active="კატალოგი" />
+        <main className="min-h-screen flex items-center justify-center text-secondary font-body-md">
+          იტვირთება...
+        </main>
+      </>
+    )
+  }
+
+  if (!product) {
+    return (
+      <>
+        <SiteNav active="კატალოგი" />
+        <main className="min-h-screen px-6 md:px-container-padding py-stack-lg max-w-[1800px] mx-auto flex flex-col items-center justify-center text-center">
+          <p className="text-secondary font-body-md mb-8">პროდუქტი ვერ მოიძებნა</p>
+          <a
+            href="#/catalog"
+            className="bg-primary-container text-on-primary-container px-10 py-4 font-button-text text-button-text hover:bg-primary transition-colors"
+          >
+            კატალოგზე დაბრუნება
+          </a>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
   return (
     <>
       <SiteNav active="კატალოგი" />
@@ -287,46 +290,47 @@ export default function Product() {
             კატალოგი
           </a>
           <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-          <a className="hover:text-primary transition-colors" href="#/catalog">
-            სალონის აქსესუარები
-          </a>
+          <span className="text-on-surface">{product.category}</span>
           <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-          <span className="text-on-surface">პრემიუმ ტყავის საჭის ჩიხოლი</span>
+          <span className="text-on-surface">{product.title_ka}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 items-start gap-12 mb-20">
-          <Gallery />
-          <Details />
+          <Gallery product={product} />
+          <Details product={product} />
         </div>
 
-        <div className="h-px bg-outline-variant/30 w-full mb-20" />
-
-        <section className="mb-24">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4">
-            <div>
-              <h2 className="font-headline-lg text-headline-lg-mobile md:text-3xl mb-1 tracking-tight">
-                შეიძლება დაგაინტერესოთ
-              </h2>
-              <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
-                მსგავსი პროდუქტები
-              </p>
-            </div>
-            <a
-              className="font-button-text text-button-text text-primary flex items-center gap-2 group border-b border-transparent hover:border-primary transition-all pb-1"
-              href="#/catalog"
-            >
-              ყველას ნახვა
-              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
-            </a>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {RELATED.map((item) => (
-              <RelatedCard key={item.title} item={item} />
-            ))}
-          </div>
-        </section>
+        {related.length > 0 && (
+          <>
+            <div className="h-px bg-outline-variant/30 w-full mb-20" />
+            <section className="mb-24">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4">
+                <div>
+                  <h2 className="font-headline-lg text-headline-lg-mobile md:text-3xl mb-1 tracking-tight">
+                    შეიძლება დაგაინტერესოთ
+                  </h2>
+                  <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
+                    მსგავსი პროდუქტები
+                  </p>
+                </div>
+                <a
+                  className="font-button-text text-button-text text-primary flex items-center gap-2 group border-b border-transparent hover:border-primary transition-all pb-1"
+                  href="#/catalog"
+                >
+                  ყველას ნახვა
+                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+                    arrow_forward
+                  </span>
+                </a>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {related.map((item) => (
+                  <RelatedCard key={item.id} item={item} />
+                ))}
+              </div>
+            </section>
+          </>
+        )}
       </main>
       <Footer />
     </>

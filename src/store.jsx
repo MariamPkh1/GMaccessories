@@ -1,72 +1,247 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { supabase } from './lib/supabase'
+import { useAuth } from './context/AuthContext'
 
 const StoreContext = createContext(null)
 
-const load = (key, fallback) => {
-  try {
-    const v = localStorage.getItem(key)
-    return v ? JSON.parse(v) : fallback
-  } catch {
-    return fallback
-  }
+// .eq('size', null) does not match NULL rows over PostgREST — .is() is
+// required for null comparisons. This helper keeps every cart_items query
+// correct for both sized and size-less products.
+function matchSize(query, size) {
+  return size === null || size === undefined ? query.is('size', null) : query.eq('size', size)
 }
 
 export function StoreProvider({ children }) {
-  const [cart, setCart] = useState(() => load('gm_cart', []))
-  const [favorites, setFavorites] = useState(() => load('gm_favorites', []))
+  const { user, openLogin } = useAuth()
 
-  useEffect(() => {
-    localStorage.setItem('gm_cart', JSON.stringify(cart))
-  }, [cart])
-  useEffect(() => {
-    localStorage.setItem('gm_favorites', JSON.stringify(favorites))
-  }, [favorites])
+  const [products, setProducts] = useState([])
+  const [productsLoading, setProductsLoading] = useState(true)
 
-  const addToCart = (product, qty = 1) =>
-    setCart((prev) => {
-      const existing = prev.find((i) => i.id === product.id)
-      if (existing) {
-        return prev.map((i) =>
-          i.id === product.id ? { ...i, qty: i.qty + qty } : i,
-        )
+  const [favoriteIds, setFavoriteIds] = useState([])
+  const [cartRows, setCartRows] = useState([])
+  const [orders, setOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
+
+  // Products: public read, independent of auth state.
+  useEffect(() => {
+    let active = true
+    setProductsLoading(true)
+    supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!active) return
+        if (!error) setProducts(data || [])
+        setProductsLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Hearts, cart, orders: scoped to the current user. Reset to empty on
+  // logout; (re)fetch whenever the signed-in user changes.
+  useEffect(() => {
+    let active = true
+    if (!user) {
+      setFavoriteIds([])
+      setCartRows([])
+      setOrders([])
+      setOrdersLoading(false)
+      return
+    }
+    supabase
+      .from('hearts')
+      .select('product_id')
+      .eq('user_id', user.id)
+      .then(({ data, error }) => {
+        if (!active) return
+        if (!error) setFavoriteIds((data || []).map((h) => h.product_id))
+      })
+    supabase
+      .from('cart_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .then(({ data, error }) => {
+        if (!active) return
+        if (!error) setCartRows(data || [])
+      })
+    fetchOrders(user.id, active)
+    return () => {
+      active = false
+    }
+  }, [user])
+
+  const fetchOrders = async (userId, active = true) => {
+    setOrdersLoading(true)
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, order_items(*, products(title_ka, image_urls))')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    if (!active) return
+    if (!error) setOrders(data || [])
+    setOrdersLoading(false)
+  }
+
+  const getProduct = (id) => products.find((p) => p.id === id)
+
+  // --- Admin product CRUD ------------------------------------------------
+  // RLS restricts these to admins; callers (admin pages) should catch and
+  // show a Georgian error rather than letting a raw Postgres error surface.
+  const addProduct = async (data) => {
+    const { data: row, error } = await supabase.from('products').insert(data).select().single()
+    if (error) throw error
+    setProducts((prev) => [row, ...prev])
+    return row
+  }
+
+  const updateProduct = async (id, data) => {
+    const { data: row, error } = await supabase
+      .from('products')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    setProducts((prev) => prev.map((p) => (p.id === id ? row : p)))
+    return row
+  }
+
+  const deleteProduct = async (id) => {
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    if (error) throw error
+    setProducts((prev) => prev.filter((p) => p.id !== id))
+    setCartRows((prev) => prev.filter((r) => r.product_id !== id))
+    setFavoriteIds((prev) => prev.filter((pid) => pid !== id))
+  }
+
+  // --- Favorites (hearts) --------------------------------------------------
+  const isFavorite = (productId) => favoriteIds.includes(productId)
+
+  const toggleFavorite = async (productId) => {
+    if (!user) {
+      openLogin()
+      return
+    }
+    if (favoriteIds.includes(productId)) {
+      setFavoriteIds((prev) => prev.filter((id) => id !== productId))
+      const { error } = await supabase
+        .from('hearts')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+      if (error) setFavoriteIds((prev) => [...prev, productId]) // revert on failure
+    } else {
+      setFavoriteIds((prev) => [...prev, productId])
+      const { error } = await supabase
+        .from('hearts')
+        .insert({ user_id: user.id, product_id: productId })
+      // 23505 = unique_violation -> already hearted (e.g. duplicate click); not a real failure.
+      if (error && error.code !== '23505') {
+        setFavoriteIds((prev) => prev.filter((id) => id !== productId))
       }
-      return [...prev, { ...product, qty }]
-    })
+    }
+  }
 
-  const removeFromCart = (id) =>
-    setCart((prev) => prev.filter((i) => i.id !== id))
+  // --- Cart ----------------------------------------------------------------
+  const addToCart = async (productId, { size = null, quantity = 1 } = {}) => {
+    if (!user) {
+      openLogin()
+      return
+    }
+    const existing = cartRows.find((r) => r.product_id === productId && r.size === size)
+    const newQuantity = (existing?.quantity || 0) + quantity
+    const { data, error } = await supabase
+      .from('cart_items')
+      .upsert(
+        { user_id: user.id, product_id: productId, size, quantity: newQuantity },
+        { onConflict: 'user_id,product_id,size' },
+      )
+      .select()
+      .single()
+    if (!error && data) {
+      setCartRows((prev) => [...prev.filter((r) => !(r.product_id === productId && r.size === size)), data])
+    }
+  }
 
-  const changeQty = (id, delta) =>
-    setCart((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i,
-      ),
-    )
+  const removeFromCart = async (productId, size = null) => {
+    if (!user) return
+    setCartRows((prev) => prev.filter((r) => !(r.product_id === productId && r.size === size)))
+    let query = supabase.from('cart_items').delete().eq('user_id', user.id).eq('product_id', productId)
+    await matchSize(query, size)
+  }
 
-  const toggleFavorite = (product) =>
-    setFavorites((prev) =>
-      prev.find((f) => f.id === product.id)
-        ? prev.filter((f) => f.id !== product.id)
-        : [...prev, product],
-    )
+  const changeQty = async (productId, size, delta) => {
+    if (!user) return
+    const existing = cartRows.find((r) => r.product_id === productId && r.size === size)
+    if (!existing) return
+    const newQuantity = Math.max(1, existing.quantity + delta)
+    setCartRows((prev) => prev.map((r) => (r === existing ? { ...r, quantity: newQuantity } : r)))
+    let query = supabase
+      .from('cart_items')
+      .update({ quantity: newQuantity })
+      .eq('user_id', user.id)
+      .eq('product_id', productId)
+    await matchSize(query, size)
+  }
 
-  const removeFavorite = (id) =>
-    setFavorites((prev) => prev.filter((f) => f.id !== id))
+  const cartItems = cartRows
+    .map((r) => ({ productId: r.product_id, size: r.size, quantity: r.quantity, product: getProduct(r.product_id) }))
+    .filter((i) => i.product)
 
-  const isFavorite = (id) => favorites.some((f) => f.id === id)
+  const favoriteItems = favoriteIds.map((id) => getProduct(id)).filter(Boolean)
 
-  const cartCount = cart.reduce((sum, i) => sum + i.qty, 0)
+  const cartCount = cartRows.reduce((sum, r) => sum + r.quantity, 0)
+  const cartSubtotal = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
+
+  // --- Orders ---------------------------------------------------------------
+  const submitOrder = async ({ contactPhone = '', notes = '' } = {}) => {
+    if (!user || cartItems.length === 0) return null
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({ user_id: user.id, status: 'pending', contact_phone: contactPhone, notes })
+      .select()
+      .single()
+    if (orderError) throw orderError
+
+    const itemRows = cartItems.map((i) => ({
+      order_id: order.id,
+      product_id: i.productId,
+      size: i.size,
+      quantity: i.quantity,
+      price_at_order: i.product.price,
+    }))
+    const { error: itemsError } = await supabase.from('order_items').insert(itemRows)
+    if (itemsError) throw itemsError
+
+    await supabase.from('cart_items').delete().eq('user_id', user.id)
+    setCartRows([])
+    await fetchOrders(user.id)
+    return order
+  }
 
   const value = {
-    cart,
-    favorites,
+    products,
+    productsLoading,
+    getProduct,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    cartItems,
+    cartCount,
+    cartSubtotal,
     addToCart,
     removeFromCart,
     changeQty,
+    favoriteItems,
     toggleFavorite,
-    removeFavorite,
     isFavorite,
-    cartCount,
+    orders,
+    ordersLoading,
+    submitOrder,
   }
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

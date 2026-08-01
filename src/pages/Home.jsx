@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import SearchBox from '../components/SearchBox'
+import AccountMenu from '../components/AccountMenu'
+import { useAuth } from '../context/AuthContext'
 
 const HERO_IMG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDkpD-CjFQnvcnDkAOUaMjl7Ic_eZpOx21MMjMsHkP8WFggk0Hf9CuOqL1UM6wDRDrHc6nQ6H0YrPq1hMnyKHMOcwdX5NqXkKpYaXQq4fMx925FQu6gWJmyK7HiyC9exhNMeyGYhoiEO_flOsiBnrilEjBfHj8l8IDgrE_ov4a053R2J1CVVwfXMKIbV9h2T5nGo22Y7pPkZ7iVUf5oLmKTTe0s9X-nYlG95vO6hSo7Ei_30hlIsP8GwA"
@@ -7,11 +9,16 @@ const HERO_IMG =
 const ABOUT_IMG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAJDtBSxsHl8A-q7TaPcBJmonDkfbBxI4_Vn6Y9qywh5rNKIxy9Mu6pVeQL3FiD7zEs-BxD8HguXga05xbFWFJC5CAByOdVHQH5CODHLHtKpkOQJesstphdW6CoRBINJwvmaKErXQZYNVdgptD_Z3Ar4Fid3huRynaXFNWJsT8JOMWcZ4is-9VJEcZbgIHT8kh2B5LwnoN29Stv6PDJuvtMOZrMWd9xGhvP_psvN10MeMX7eUT5zCaE6Q"
 
-const NAV_LINKS = [
+// Favorites/cart/orders are auth-gated, so they only show up once the user
+// is signed in — no point advertising links that just bounce back to login.
+const PUBLIC_LINKS = [
   { label: "მთავარი", href: "#/" },
   { label: "კატალოგი", href: "#/catalog" },
+]
+const AUTH_LINKS = [
   { label: "ფავორიტები", href: "#/favorites" },
   { label: "კალათა", href: "#/cart" },
+  { label: "ჩემი შეკვეთები", href: "#/orders" },
 ]
 
 const FAQ = [
@@ -34,6 +41,8 @@ const FAQ = [
 ]
 
 function Navbar({ onOpenMobile }) {
+  const { user } = useAuth()
+  const navLinks = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
   return (
     <nav className="fixed top-0 left-0 w-full z-[60] bg-surface/80 backdrop-blur-md border-b border-outline-variant px-container-padding py-4 flex justify-between items-center transition-all duration-300">
       <div className="flex items-center">
@@ -42,7 +51,7 @@ function Navbar({ onOpenMobile }) {
         </a>
       </div>
       <div className="hidden md:flex items-center gap-8">
-        {NAV_LINKS.map((link, i) => (
+        {navLinks.map((link, i) => (
           <a
             key={link.label}
             className={
@@ -58,10 +67,7 @@ function Navbar({ onOpenMobile }) {
       </div>
       <div className="flex items-center gap-4">
         <SearchBox />
-        <button className="font-button-text text-button-text text-primary hover:opacity-70 transition-opacity flex items-center gap-2">
-          <span className="material-symbols-outlined">person</span>
-          <span className="hidden sm:inline">შესვლა</span>
-        </button>
+        <AccountMenu />
         <button
           className="md:hidden material-symbols-outlined text-primary"
           onClick={onOpenMobile}
@@ -217,13 +223,8 @@ function Footer() {
 }
 
 function MobileNav({ open, onClose }) {
-  const items = [
-    { label: "მთავარი", href: "#/" },
-    { label: "კატალოგი", href: "#/catalog" },
-    { label: "ფავორიტები", href: "#/favorites" },
-    { label: "კალათა", href: "#/cart" },
-    { label: "პროფილი", href: "#/" },
-  ]
+  const { user, openLogin, signOut } = useAuth()
+  const items = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
   return (
     <div
       className={`fixed inset-0 bg-surface z-[70] flex flex-col p-10 transition-transform duration-500 md:hidden ${
@@ -250,9 +251,27 @@ function MobileNav({ open, onClose }) {
         ))}
       </nav>
       <div className="mt-auto text-center">
-        <button className="bg-primary-container text-on-primary w-full py-4 font-button-text">
-          შესვლა
-        </button>
+        {user ? (
+          <button
+            onClick={() => {
+              signOut()
+              onClose()
+            }}
+            className="bg-primary-container text-on-primary w-full py-4 font-button-text"
+          >
+            გასვლა
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              openLogin()
+              onClose()
+            }}
+            className="bg-primary-container text-on-primary w-full py-4 font-button-text"
+          >
+            შესვლა
+          </button>
+        )}
       </div>
     </div>
   )

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
+import { fmt } from '../products'
 
 function FavoriteRow({ item, onAddToCart, onRemove }) {
   const [added, setAdded] = useState(false)
   const handleAdd = () => {
-    onAddToCart(item)
+    onAddToCart(item.id)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
@@ -15,18 +16,19 @@ function FavoriteRow({ item, onAddToCart, onRemove }) {
         <div className="w-full md:w-64 aspect-square overflow-hidden bg-surface-container rounded-lg flex-shrink-0">
           <img
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            src={item.img}
-            alt={item.title}
+            src={item.image_urls?.[0]}
+            alt={item.title_ka}
+            loading="lazy"
           />
         </div>
         <div className="flex-grow w-full">
           <div className="flex justify-between items-start">
             <div>
               <h3 className="font-headline-lg text-headline-lg text-primary">
-                {item.title}
+                {item.title_ka}
               </h3>
               <p className="text-secondary font-label-sm uppercase tracking-widest mt-1">
-                {item.subtitle}
+                {item.short_description_ka}
               </p>
             </div>
             <button
@@ -38,7 +40,7 @@ function FavoriteRow({ item, onAddToCart, onRemove }) {
             </button>
           </div>
           <div className="mt-4 text-primary font-body-md font-bold text-xl">
-            {item.price} ₾
+            {fmt(item.price)}
           </div>
           <div className="mt-8 flex gap-4">
             <button
@@ -50,7 +52,7 @@ function FavoriteRow({ item, onAddToCart, onRemove }) {
               {added ? "დამატებულია" : "კალათაში დამატება"}
             </button>
             <a
-              href="#/product"
+              href={`#/product/${item.id}`}
               className="border border-outline px-6 py-3 font-button-text text-button-text rounded-full hover:bg-surface-container-high transition-all"
             >
               დეტალურად
@@ -107,7 +109,7 @@ function Footer() {
           </a>
         </div>
         <div className="text-secondary font-label-sm text-label-sm">
-          © 2024 G&M აქსესუარები. ყველა უფლება დაცულია.
+          © 2026 G&M აქსესუარები. ყველა უფლება დაცულია.
         </div>
       </div>
     </footer>
@@ -115,7 +117,7 @@ function Footer() {
 }
 
 export default function Favorites() {
-  const { favorites, removeFavorite, addToCart } = useStore()
+  const { favoriteItems, toggleFavorite, addToCart, productsLoading } = useStore()
   return (
     <>
       <SiteNav active="ფავორიტები" />
@@ -127,14 +129,16 @@ export default function Favorites() {
           </p>
         </header>
 
-        {favorites.length > 0 ? (
+        {productsLoading ? (
+          <p className="text-secondary font-body-md text-center py-24">იტვირთება...</p>
+        ) : favoriteItems.length > 0 ? (
           <div className="grid grid-cols-1 gap-12">
-            {favorites.map((item) => (
+            {favoriteItems.map((item) => (
               <FavoriteRow
                 key={item.id}
                 item={item}
                 onAddToCart={addToCart}
-                onRemove={removeFavorite}
+                onRemove={toggleFavorite}
               />
             ))}
           </div>

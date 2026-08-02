@@ -84,15 +84,26 @@ export function AuthProvider({ children }) {
 
   const verifyCode = async ({ code }) => {
     if (!pendingEmail) return { ok: false, error: 'ჯერ გამოგზავნეთ კოდი.' }
-    const { error } = await supabase.auth.verifyOtp({
-      email: pendingEmail,
-      token: code,
-      type: 'email',
-    })
-    if (error) return { ok: false, error: translateError(error) }
-    setPendingEmail(null)
-    setLoginOpen(false)
-    return { ok: true }
+
+    // Supabase issues a different token *type* depending on whether the
+    // account has been confirmed yet:
+    //   - brand new / unconfirmed account -> "signup" token
+    //   - existing confirmed account      -> "email" token
+    // The client has to name the type up front, and the wrong one fails with
+    // a generic "Token has expired or is invalid". Since the same 6-digit
+    // code is entered in both cases, try the common one first and fall back
+    // to the other rather than making the user guess why login broke.
+    let error = null
+    for (const type of ['email', 'signup']) {
+      const res = await supabase.auth.verifyOtp({ email: pendingEmail, token: code, type })
+      if (!res.error) {
+        setPendingEmail(null)
+        setLoginOpen(false)
+        return { ok: true }
+      }
+      error = res.error
+    }
+    return { ok: false, error: translateError(error) }
   }
 
   const oauthSignIn = async (provider) => {

@@ -12,9 +12,9 @@ export default function AccountMenu() {
     return (
       <button
         onClick={openLogin}
-        className="font-button-text text-button-text text-primary hover:opacity-70 transition-opacity flex items-center gap-2"
+        className="font-label-sm text-label-sm normal-case tracking-normal text-on-surface border border-outline-variant px-3 py-1.5 rounded transition-colors hover:border-primary hover:text-primary flex items-center gap-2"
       >
-        <span className="material-symbols-outlined">person</span>
+        <span className="material-symbols-outlined text-[18px]">person</span>
         <span className="hidden sm:inline">შესვლა</span>
       </button>
     )

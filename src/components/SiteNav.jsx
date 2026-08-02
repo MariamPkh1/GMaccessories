@@ -18,26 +18,25 @@ const AUTH_LINKS = [
 ]
 
 export default function SiteNav({ active = "კატალოგი" }) {
-  const { cartCount } = useStore()
+  const { cartCount, favoriteItems } = useStore()
   const { user } = useAuth()
   const navLinks = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
+  const favCount = favoriteItems.length
   return (
-    <nav className="sticky top-0 w-full bg-surface/80 backdrop-blur-md border-b border-outline-variant z-50">
-      <div className="max-w-[1800px] mx-auto px-6 md:px-container-padding h-20 flex items-center justify-between gap-6">
+    <nav className="sticky top-0 w-full bg-white/95 backdrop-blur-md border-b border-outline-variant z-50">
+      <div className="w-full px-6 md:px-container-padding h-16 flex items-center justify-between gap-6">
         <a href="#/" className="flex flex-col flex-shrink-0">
-          <h1 className="font-headline-lg text-[24px] text-primary tracking-tight">
+          <h1 className="font-headline-lg text-[24px] text-on-surface tracking-tight">
             G&M აქსესუარები
           </h1>
         </a>
-        <ul className="hidden lg:flex items-center gap-12">
+        <ul className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <li key={link.label}>
               <a
-                className={
-                  link.label === active
-                    ? "text-primary font-bold border-b-2 border-primary pb-1 font-label-sm text-label-sm uppercase tracking-widest"
-                    : "text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm uppercase tracking-widest"
-                }
+                className={`nav-link text-sm font-medium transition-colors ${
+                  link.label === active ? "active text-primary" : "text-on-surface hover:text-primary"
+                }`}
                 href={link.href}
               >
                 {link.label}
@@ -45,22 +44,36 @@ export default function SiteNav({ active = "კატალოგი" }) {
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
           <SearchBox />
           <AccountMenu />
           {user && (
-            <a
-              href="#/cart"
-              className="relative text-on-surface hover:text-primary transition-colors"
-              aria-label="cart"
-            >
-              <span className="material-symbols-outlined">shopping_bag</span>
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                  {cartCount}
-                </span>
-              )}
-            </a>
+            <>
+              <a
+                href="#/favorites"
+                className="relative p-2 text-on-surface hover:text-primary transition-colors"
+                aria-label="ფავორიტები"
+              >
+                <span className="material-symbols-outlined">favorite</span>
+                {favCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-primary text-on-primary text-[10px] w-4 h-4 rounded flex items-center justify-center font-bold">
+                    {favCount}
+                  </span>
+                )}
+              </a>
+              <a
+                href="#/cart"
+                className="relative p-2 text-on-surface hover:text-primary transition-colors"
+                aria-label="კალათა"
+              >
+                <span className="material-symbols-outlined">shopping_cart</span>
+                {cartCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-primary text-on-primary text-[10px] w-4 h-4 rounded flex items-center justify-center font-bold">
+                    {cartCount}
+                  </span>
+                )}
+              </a>
+            </>
           )}
         </div>
       </div>

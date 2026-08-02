@@ -197,12 +197,18 @@ export function StoreProvider({ children }) {
   const cartSubtotal = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
 
   // --- Orders ---------------------------------------------------------------
-  const submitOrder = async ({ contactPhone = '', notes = '' } = {}) => {
+  const submitOrder = async ({ contactName = '', contactPhone = '', notes = '' } = {}) => {
     if (!user || cartItems.length === 0) return null
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .insert({ user_id: user.id, status: 'pending', contact_phone: contactPhone, notes })
+      .insert({
+        user_id: user.id,
+        status: 'pending',
+        contact_name: contactName,
+        contact_phone: contactPhone,
+        notes,
+      })
       .select()
       .single()
     if (orderError) throw orderError

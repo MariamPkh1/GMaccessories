@@ -15,17 +15,17 @@ function OrderCard({ order }) {
   const items = order.order_items || []
   const total = items.reduce((sum, i) => sum + i.price_at_order * i.quantity, 0)
   return (
-    <div className="border border-outline-variant p-6">
+    <div className="border border-outline-variant rounded p-6 bg-white">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-4 pb-4 border-b border-outline-variant">
         <div>
-          <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
+          <p className="text-xs font-medium uppercase tracking-wider text-secondary">
             შეკვეთა #{order.id.slice(0, 8)}
           </p>
-          <p className="font-label-sm text-label-sm text-secondary mt-1">
+          <p className="text-xs text-secondary mt-1">
             {new Date(order.created_at).toLocaleDateString('ka-GE')}
           </p>
         </div>
-        <span className="font-label-sm text-label-sm uppercase tracking-widest text-primary border border-primary px-3 py-1">
+        <span className="text-xs font-semibold uppercase tracking-wider text-primary border border-primary rounded px-2.5 py-1">
           {STATUS_LABELS[order.status] || order.status}
         </span>
       </div>
@@ -37,25 +37,23 @@ function OrderCard({ order }) {
                 <img
                   src={item.products.image_urls[0]}
                   alt=""
-                  className="w-12 h-12 object-cover bg-surface-container flex-shrink-0"
+                  className="w-12 h-12 object-cover rounded border border-outline-variant bg-surface-container-low flex-shrink-0"
                 />
               )}
               <div className="min-w-0">
-                <p className="font-body-md text-body-md text-on-surface truncate">
+                <p className="text-sm text-on-surface truncate">
                   {item.products?.title_ka || 'პროდუქტი წაშლილია'}
                 </p>
-                {item.size && (
-                  <p className="font-label-sm text-label-sm text-secondary">ზომა: {item.size}</p>
-                )}
+                {item.size && <p className="text-xs text-secondary">ზომა: {item.size}</p>}
               </div>
             </div>
-            <p className="font-label-sm text-label-sm text-secondary flex-shrink-0">
+            <p className="text-sm text-secondary flex-shrink-0">
               {item.quantity} x {fmt(item.price_at_order)}
             </p>
           </div>
         ))}
       </div>
-      <div className="mt-4 pt-4 border-t border-outline-variant flex justify-between font-body-md font-bold">
+      <div className="mt-4 pt-4 border-t border-outline-variant flex justify-between font-bold text-on-surface">
         <span>ჯამი</span>
         <span>{fmt(total)}</span>
       </div>
@@ -66,14 +64,14 @@ function OrderCard({ order }) {
 function EmptyOrders() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <span className="material-symbols-outlined text-outline text-6xl mb-4">receipt_long</span>
-      <h2 className="font-headline-lg text-headline-lg text-primary">შეკვეთები არ გაქვთ</h2>
-      <p className="text-secondary mt-2 mb-8">
+      <span className="material-symbols-outlined text-outline text-5xl mb-4">receipt_long</span>
+      <p className="text-lg text-secondary mb-2">შეკვეთები არ გაქვთ</p>
+      <p className="text-sm text-secondary mb-6">
         გაგზავნეთ შეკვეთის მოთხოვნა კალათიდან და აქ ნახავთ მის სტატუსს
       </p>
       <a
         href="#/catalog"
-        className="bg-primary-container text-on-primary-container px-10 py-4 font-button-text text-button-text hover:bg-primary transition-colors"
+        className="bg-primary text-on-primary px-6 py-2.5 text-sm font-semibold rounded transition-opacity hover:opacity-90"
       >
         კატალოგზე გადასვლა
       </a>
@@ -86,14 +84,12 @@ export default function Orders() {
   return (
     <>
       <SiteNav active="ჩემი შეკვეთები" />
-      <main className="min-h-screen px-container-padding py-stack-lg max-w-[1000px] mx-auto">
-        <header className="mb-12 border-b border-outline-variant pb-6">
-          <h1 className="font-display-lg text-display-lg text-primary">ჩემი შეკვეთები</h1>
-        </header>
+      <main className="px-container-padding py-12 md:py-16 max-w-[1000px] mx-auto min-h-screen">
+        <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">ჩემი შეკვეთები</h1>
         {ordersLoading ? (
-          <p className="text-secondary font-body-md text-center py-24">იტვირთება...</p>
+          <p className="text-secondary text-center py-24">იტვირთება...</p>
         ) : orders.length > 0 ? (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {orders.map((order) => (
               <OrderCard key={order.id} order={order} />
             ))}

@@ -11,6 +11,7 @@ import Favorites from './pages/Favorites'
 import Orders from './pages/Orders'
 import AdminProductManage from './pages/admin/ProductManage'
 import AdminProductForm from './pages/admin/ProductForm'
+import AdminOrders from './pages/admin/AdminOrders'
 
 function getPath() {
   return window.location.hash.replace(/^#/, '') || '/'
@@ -30,6 +31,9 @@ function matchRoute(path) {
     }
     if (segments[1] === 'products' && segments[2] && segments[3] === 'edit') {
       return { name: 'admin-product-edit', params: { id: segments[2] } }
+    }
+    if (segments[1] === 'orders') {
+      return { name: 'admin-orders', params: {} }
     }
     return { name: 'admin-products', params: {} }
   }
@@ -87,6 +91,12 @@ function Router() {
       return (
         <RouteGuard requireAuth requireAdmin>
           <AdminProductForm mode="edit" id={route.params.id} />
+        </RouteGuard>
+      )
+    case 'admin-orders':
+      return (
+        <RouteGuard requireAuth requireAdmin>
+          <AdminOrders />
         </RouteGuard>
       )
     default:

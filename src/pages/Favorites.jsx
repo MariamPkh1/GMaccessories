@@ -1,84 +1,59 @@
-import { useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
 import { fmt } from '../products'
 
-function FavoriteRow({ item, onAddToCart, onRemove }) {
-  const [added, setAdded] = useState(false)
-  const handleAdd = () => {
-    onAddToCart(item.id)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
-  }
+function FavoriteCard({ item, onAddToCart, onRemove }) {
   return (
-    <>
-      <div className="flex flex-col md:flex-row gap-8 items-start md:items-center group">
-        <div className="w-full md:w-64 aspect-square overflow-hidden bg-surface-container rounded-lg flex-shrink-0">
+    <div className="product-card border border-outline-variant rounded bg-white overflow-hidden">
+      <a href={`#/product/${item.id}`} className="block">
+        <div className="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
           <img
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            className="w-full h-full object-cover"
             src={item.image_urls?.[0]}
             alt={item.title_ka}
             loading="lazy"
           />
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onRemove(item.id)
+            }}
+            className="absolute top-3 right-3 p-1.5 bg-white/90 backdrop-blur-sm rounded transition-colors hover:bg-white"
+            aria-label="წაშლა ფავორიტებიდან"
+          >
+            <span className="material-symbols-outlined text-[18px] text-error" style={{ fontVariationSettings: "'FILL' 1" }}>
+              favorite
+            </span>
+          </button>
         </div>
-        <div className="flex-grow w-full">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-headline-lg text-headline-lg text-primary">
-                {item.title_ka}
-              </h3>
-              <p className="text-secondary font-label-sm uppercase tracking-widest mt-1">
-                {item.short_description_ka}
-              </p>
-            </div>
-            <button
-              onClick={() => onRemove(item.id)}
-              className="text-secondary hover:text-error transition-colors p-2"
-              aria-label="remove from favorites"
-            >
-              <span className="material-symbols-outlined">delete</span>
-            </button>
-          </div>
-          <div className="mt-4 text-primary font-body-md font-bold text-xl">
-            {fmt(item.price)}
-          </div>
-          <div className="mt-8 flex gap-4">
-            <button
-              onClick={handleAdd}
-              className={`text-white px-8 py-3 font-button-text text-button-text rounded-full transition-all active:scale-[0.98] ${
-                added ? "bg-surface-tint" : "bg-primary hover:bg-primary-container"
-              }`}
-            >
-              {added ? "დამატებულია" : "კალათაში დამატება"}
-            </button>
-            <a
-              href={`#/product/${item.id}`}
-              className="border border-outline px-6 py-3 font-button-text text-button-text rounded-full hover:bg-surface-container-high transition-all"
-            >
-              დეტალურად
-            </a>
-          </div>
+        <div className="p-4">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-secondary mb-1 block">
+            {item.category}
+          </span>
+          <h3 className="text-sm font-semibold text-on-surface truncate mb-2">{item.title_ka}</h3>
+          <p className="text-base font-bold text-on-surface">{fmt(item.price)}</p>
         </div>
+      </a>
+      <div className="px-4 pb-4">
+        <button
+          onClick={() => onAddToCart(item.id)}
+          className="w-full border border-outline-variant text-on-surface py-2 text-xs font-semibold rounded transition-colors hover:border-primary hover:text-primary"
+        >
+          კალათაში დამატება
+        </button>
       </div>
-      <div className="h-[1px] bg-outline-variant w-full" />
-    </>
+    </div>
   )
 }
 
 function EmptyFavorites() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <span className="material-symbols-outlined text-outline text-6xl mb-4">
-        favorite_border
-      </span>
-      <h2 className="font-headline-lg text-headline-lg text-primary">
-        თქვენი ფავორიტების სია ცარიელია
-      </h2>
-      <p className="text-secondary mt-2 mb-8">
-        დაათვალიერეთ ჩვენი კატალოგი და შეინახეთ სასურველი ნივთები
-      </p>
+      <span className="material-symbols-outlined text-outline text-5xl mb-4">favorite</span>
+      <p className="text-lg text-secondary mb-6">თქვენი ფავორიტების სია ცარიელია</p>
       <a
-        className="bg-primary text-white px-10 py-4 font-button-text text-button-text rounded-full hover:bg-primary-container transition-colors"
+        className="bg-primary text-on-primary px-6 py-2.5 text-sm font-semibold rounded transition-opacity hover:opacity-90"
         href="#/catalog"
       >
         კატალოგზე გადასვლა
@@ -88,29 +63,26 @@ function EmptyFavorites() {
 }
 
 function Footer() {
+  const socials = ["Facebook", "Instagram", "TikTok", "YouTube"]
   return (
-    <footer className="bg-surface-container-highest border-t border-outline-variant">
-      <div className="w-full py-stack-lg px-container-padding flex flex-col md:flex-row justify-between items-center max-w-[1800px] mx-auto gap-8">
-        <div className="flex flex-col items-center md:items-start">
-          <span className="font-headline-lg text-headline-lg text-primary">G&M</span>
-          <p className="font-label-sm text-label-sm text-secondary mt-1">
-            Mechanical Elegance
+    <footer className="bg-white border-t border-outline-variant">
+      <div className="w-full py-8 px-container-padding flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex flex-col items-center md:items-start gap-1">
+          <span className="font-headline-lg text-base text-on-surface">G&M აქსესუარები</span>
+          <p className="text-xs text-on-surface-variant">
+            © {new Date().getFullYear()} G&M აქსესუარები. ყველა უფლება დაცულია.
           </p>
         </div>
-        <div className="flex gap-8">
-          <a className="font-label-sm text-label-sm text-secondary hover:text-primary transition-colors" href="#">
-            კონტაქტი
-          </a>
-          <a className="font-label-sm text-label-sm text-secondary hover:text-primary transition-colors" href="#">
-            წესები და პირობები
-          </a>
-          <a className="font-label-sm text-label-sm text-secondary hover:text-primary transition-colors" href="#">
-            მიწოდება
-          </a>
+        <div className="flex gap-6">
+          {socials.map((s) => (
+            <a key={s} className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors" href="#">
+              {s}
+            </a>
+          ))}
         </div>
-        <div className="text-secondary font-label-sm text-label-sm">
-          © 2026 G&M აქსესუარები. ყველა უფლება დაცულია.
-        </div>
+        <a href="tel:557783549" className="text-sm font-medium text-on-surface hover:text-primary transition-colors">
+          557 78 35 49
+        </a>
       </div>
     </footer>
   )
@@ -121,20 +93,15 @@ export default function Favorites() {
   return (
     <>
       <SiteNav active="ფავორიტები" />
-      <main className="pt-8 pb-stack-lg px-container-padding max-w-[1800px] mx-auto min-h-screen">
-        <header className="mb-stack-lg border-b border-outline-variant pb-8">
-          <h1 className="font-display-lg text-display-lg text-primary">ფავორიტები</h1>
-          <p className="text-secondary mt-2 font-body-md">
-            თქვენი შერჩეული ნივთების კოლექცია
-          </p>
-        </header>
+      <main className="px-container-padding py-12 md:py-16 w-full min-h-screen">
+        <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">ფავორიტები</h1>
 
         {productsLoading ? (
-          <p className="text-secondary font-body-md text-center py-24">იტვირთება...</p>
+          <p className="text-secondary text-center py-24">იტვირთება...</p>
         ) : favoriteItems.length > 0 ? (
-          <div className="grid grid-cols-1 gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favoriteItems.map((item) => (
-              <FavoriteRow
+              <FavoriteCard
                 key={item.id}
                 item={item}
                 onAddToCart={addToCart}

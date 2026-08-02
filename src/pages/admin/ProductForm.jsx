@@ -19,6 +19,10 @@ const emptyForm = {
   in_stock: true,
 }
 
+const inputClass =
+  'w-full border border-outline-variant rounded px-3 py-2.5 text-sm bg-white placeholder:text-secondary focus:outline-none focus:border-primary transition-colors'
+const labelClass = 'text-sm font-medium text-on-surface mb-1.5 block'
+
 export default function ProductForm({ mode, id }) {
   const { getProduct, addProduct, updateProduct } = useStore()
   const existing = mode === 'edit' ? getProduct(id) : null
@@ -37,7 +41,7 @@ export default function ProductForm({ mode, id }) {
   if (mode === 'edit' && !existing) {
     return (
       <AdminLayout active="პროდუქტების მართვა">
-        <p className="text-secondary font-body-md">პროდუქტი ვერ მოიძებნა.</p>
+        <p className="text-secondary">პროდუქტი ვერ მოიძებნა.</p>
       </AdminLayout>
     )
   }
@@ -138,140 +142,119 @@ export default function ProductForm({ mode, id }) {
 
   return (
     <AdminLayout active={mode === 'edit' ? 'პროდუქტების მართვა' : 'პროდუქტის დამატება'}>
-      <h2 className="font-headline-lg text-headline-lg text-primary mb-8">
-        {mode === 'edit' ? 'პროდუქტის რედაქტირება' : 'ახალი პროდუქტის დამატება'}
-      </h2>
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-8">
-        <div className="space-y-4">
-          <label className="block">
-            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">სათაური</span>
+      <h1 className="text-2xl font-bold text-on-surface tracking-tight mb-8">
+        {mode === 'edit' ? 'პროდუქტის რედაქტირება' : 'პროდუქტის დამატება'}
+      </h1>
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+        <div>
+          <label className={labelClass}>დასახელება</label>
+          <input
+            value={form.title_ka}
+            onChange={(e) => setField('title_ka', e.target.value)}
+            placeholder="პროდუქტის სახელი"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>მოკლე აღწერა</label>
+          <input
+            value={form.short_description_ka}
+            onChange={(e) => setField('short_description_ka', e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>სრული აღწერა</label>
+          <textarea
+            value={form.description_ka}
+            onChange={(e) => setField('description_ka', e.target.value)}
+            placeholder="პროდუქტის აღწერა..."
+            rows={4}
+            className={`${inputClass} resize-none`}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>ფასი ₾</label>
             <input
-              value={form.title_ka}
-              onChange={(e) => setField('title_ka', e.target.value)}
-              className="mt-2 w-full border border-outline-variant px-4 py-3 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={(e) => setField('price', e.target.value)}
+              placeholder="0"
+              className={inputClass}
             />
-          </label>
-          <label className="block">
-            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
-              მოკლე აღწერა
-            </span>
-            <input
-              value={form.short_description_ka}
-              onChange={(e) => setField('short_description_ka', e.target.value)}
-              className="mt-2 w-full border border-outline-variant px-4 py-3 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </label>
-          <label className="block">
-            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
-              სრული აღწერა
-            </span>
-            <textarea
-              value={form.description_ka}
-              onChange={(e) => setField('description_ka', e.target.value)}
-              rows={4}
-              className="mt-2 w-full border border-outline-variant px-4 py-3 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            <label className="block">
-              <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">ფასი (₾)</span>
+          </div>
+          <div>
+            <label className={labelClass}>კატეგორია</label>
+            <select
+              value={form.category}
+              onChange={(e) => setField('category', e.target.value)}
+              className={inputClass}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Images */}
+        <div>
+          <label className={labelClass}>სურათები ({form.image_urls.length}/{MAX_IMAGES})</label>
+          {form.image_urls.length > 0 && (
+            <div className="flex flex-wrap gap-3 mb-3">
+              {form.image_urls.map((url, i) => (
+                <div key={i} className="relative w-20 h-20 border border-outline-variant rounded overflow-hidden bg-surface-container-low">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {uploading && <p className="text-sm text-secondary mb-2">იტვირთება...</p>}
+          {form.image_urls.length < MAX_IMAGES && (
+            <label className="border border-dashed border-outline-variant rounded p-6 text-center transition-colors hover:border-primary cursor-pointer flex flex-col items-center gap-2 block">
+              <span className="material-symbols-outlined text-secondary text-2xl">upload</span>
+              <span className="text-sm text-secondary">ატვირთეთ სურათი</span>
+              <span className="text-xs text-secondary">მაქს. {MAX_IMAGES} სურათი</span>
               <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.price}
-                onChange={(e) => setField('price', e.target.value)}
-                className="mt-2 w-full border border-outline-variant px-4 py-3 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={uploading}
+                onChange={handleImageSelect}
+                className="hidden"
               />
             </label>
-            <label className="block">
-              <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">კატეგორია</span>
-              <select
-                value={form.category}
-                onChange={(e) => setField('category', e.target.value)}
-                className="mt-2 w-full border border-outline-variant px-4 py-3 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label className="block">
-            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
-              ვიდეოს ბმული (YouTube/TikTok/Instagram)
-            </span>
-            <input
-              value={form.video_url}
-              onChange={(e) => setField('video_url', e.target.value)}
-              placeholder="https://..."
-              className="mt-2 w-full border border-outline-variant px-4 py-3 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </label>
-          <label className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={form.in_stock}
-              onChange={(e) => setField('in_stock', e.target.checked)}
-              className="w-5 h-5"
-            />
-            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
-              მარაგშია
-            </span>
-          </label>
-        </div>
-
-        <div>
-          <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest block mb-3">
-            სურათები ({form.image_urls.length}/{MAX_IMAGES})
-          </span>
-          <div className="flex flex-wrap gap-4 mb-4">
-            {form.image_urls.map((url, i) => (
-              <div key={i} className="relative w-24 h-24 bg-surface-container overflow-hidden">
-                <img src={url} alt="" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-          {uploading && (
-            <p className="font-label-sm text-label-sm text-secondary mb-2">იტვირთება...</p>
-          )}
-          {form.image_urls.length < MAX_IMAGES && (
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              disabled={uploading}
-              onChange={handleImageSelect}
-            />
           )}
         </div>
 
         <div>
-          <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest block mb-3">
-            ზომები (არასავალდებულო)
-          </span>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {form.sizes.map((s) => (
-              <span
-                key={s}
-                className="flex items-center gap-2 border border-outline px-3 py-1 font-label-sm text-label-sm"
-              >
-                {s}
-                <button type="button" onClick={() => removeSize(s)} aria-label={`წაშალე ${s}`}>
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
+          <label className={labelClass}>
+            ვიდეოს ბმული <span className="text-secondary font-normal">(არასავალდებულო)</span>
+          </label>
+          <input
+            value={form.video_url}
+            onChange={(e) => setField('video_url', e.target.value)}
+            placeholder="https://youtube.com/..."
+            className={inputClass}
+          />
+        </div>
+
+        {/* Sizes */}
+        <div>
+          <label className={labelClass}>ზომა</label>
+          <p className="text-xs text-secondary mb-3">თუ პროდუქტს ზომა არ სჭირდება, გამოტოვეთ</p>
           <div className="flex gap-2">
             <input
               value={sizeInput}
@@ -279,71 +262,125 @@ export default function ProductForm({ mode, id }) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') addSize(e)
               }}
-              placeholder="მაგ. M (38cm)"
-              className="flex-grow border border-outline-variant px-4 py-2 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="ზომა შეიყვანეთ და Enter-ს დააჭირეთ"
+              className={`flex-1 ${inputClass}`}
             />
             <button
               type="button"
               onClick={addSize}
-              className="border border-outline-variant px-4 py-2 font-label-sm text-label-sm hover:bg-surface-container-low transition-colors"
+              className="px-3 py-2.5 border border-outline-variant rounded text-sm font-medium transition-colors hover:border-primary hover:text-primary"
             >
-              დამატება
+              <span className="material-symbols-outlined text-[18px]">add</span>
             </button>
           </div>
+          {form.sizes.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {form.sizes.map((s) => (
+                <span
+                  key={s}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium border border-outline-variant bg-surface-container-low rounded"
+                >
+                  {s}
+                  <button type="button" onClick={() => removeSize(s)} className="text-secondary hover:text-error">
+                    <span className="material-symbols-outlined text-[14px]">close</span>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Specs */}
         <div>
-          <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest block mb-3">
-            მახასიათებლები (არასავალდებულო)
-          </span>
-          <div className="space-y-2 mb-3">
+          <label className={labelClass}>მახასიათებლები</label>
+          <p className="text-xs text-secondary mb-3">დაამატეთ იმდენი მახასიათებელი რამდენიც საჭიროა — ან საერთოდ არცერთი</p>
+          <div className="space-y-2">
             {form.specifications.map((s, i) => (
-              <div key={i} className="flex items-center justify-between border-b border-outline-variant pb-2">
-                <span className="font-body-md">
-                  <span className="font-bold">{s.key}:</span> {s.value}
-                </span>
-                <button type="button" onClick={() => removeSpec(i)} aria-label="წაშალე მახასიათებელი">
+              <div key={i} className="flex gap-2">
+                <input
+                  value={s.key}
+                  onChange={(e) =>
+                    setField(
+                      'specifications',
+                      form.specifications.map((sp, idx) => (idx === i ? { ...sp, key: e.target.value } : sp)),
+                    )
+                  }
+                  placeholder="სახელი"
+                  className={`flex-1 ${inputClass}`}
+                />
+                <input
+                  value={s.value}
+                  onChange={(e) =>
+                    setField(
+                      'specifications',
+                      form.specifications.map((sp, idx) => (idx === i ? { ...sp, value: e.target.value } : sp)),
+                    )
+                  }
+                  placeholder="მნიშვნელობა"
+                  className={`flex-1 ${inputClass}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeSpec(i)}
+                  className="p-2 text-secondary hover:text-error transition-colors"
+                >
                   <span className="material-symbols-outlined text-[18px]">close</span>
                 </button>
               </div>
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-3">
             <input
               value={specKey}
               onChange={(e) => setSpecKey(e.target.value)}
               placeholder="მახასიათებელი"
-              className="flex-grow border border-outline-variant px-4 py-2 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
+              className={`flex-1 ${inputClass}`}
             />
             <input
               value={specValue}
               onChange={(e) => setSpecValue(e.target.value)}
               placeholder="მნიშვნელობა"
-              className="flex-grow border border-outline-variant px-4 py-2 font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
+              className={`flex-1 ${inputClass}`}
             />
             <button
               type="button"
               onClick={addSpec}
-              className="border border-outline-variant px-4 py-2 font-label-sm text-label-sm hover:bg-surface-container-low transition-colors"
+              className="px-3 py-2.5 border border-outline-variant rounded text-sm font-medium transition-colors hover:border-primary hover:text-primary"
             >
-              დამატება
+              <span className="material-symbols-outlined text-[18px]">add</span>
             </button>
           </div>
         </div>
 
-        {error && <p className="text-error font-label-sm text-label-sm">{error}</p>}
+        {/* In stock toggle */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setField('in_stock', !form.in_stock)}
+            className={`relative w-10 h-5 rounded-full transition-colors ${form.in_stock ? 'bg-primary' : 'bg-surface-container-highest'}`}
+          >
+            <span
+              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
+                form.in_stock ? 'left-5' : 'left-0.5'
+              }`}
+            />
+          </button>
+          <span className="text-sm font-medium text-on-surface">მარაგშია</span>
+        </div>
 
-        <div className="flex gap-4">
+        {error && <p className="text-error text-sm">{error}</p>}
+
+        <div className="flex gap-3">
           <button
             type="submit"
             disabled={saving || uploading}
-            className="bg-primary-container text-on-primary-container px-10 py-3 font-button-text text-button-text hover:bg-primary transition-colors disabled:opacity-50"
+            className="bg-primary text-on-primary px-8 py-2.5 rounded text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {saving ? 'ინახება...' : mode === 'edit' ? 'შენახვა' : 'დამატება'}
           </button>
           <a
             href="#/admin/products"
-            className="border border-outline-variant px-10 py-3 font-button-text text-button-text hover:bg-surface-container-low transition-colors"
+            className="border border-outline-variant px-8 py-2.5 rounded text-sm font-medium transition-colors hover:bg-surface-container-low"
           >
             გაუქმება
           </a>

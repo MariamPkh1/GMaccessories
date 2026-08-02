@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useStore } from '../store'
 import { useAuth } from '../context/AuthContext'
 import SearchBox from './SearchBox'
 import AccountMenu from './AccountMenu'
+import MobileMenu from './MobileMenu'
 
 // Shared sticky top navigation used by the Catalog, Product, Cart and Favorites pages.
 // Favorites/cart/orders are auth-gated routes, so there's no point showing
@@ -20,11 +22,12 @@ const AUTH_LINKS = [
 export default function SiteNav({ active = "კატალოგი" }) {
   const { cartCount, favoriteItems } = useStore()
   const { user } = useAuth()
+  const [mobileOpen, setMobileOpen] = useState(false)
   const navLinks = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
   const favCount = favoriteItems.length
   return (
-    <nav className="sticky top-0 w-full bg-white/95 backdrop-blur-md border-b border-outline-variant z-50">
-      <div className="w-full px-6 md:px-container-padding h-16 flex items-center justify-between gap-6">
+    <header className="sticky top-0 w-full bg-white/95 backdrop-blur-md border-b border-outline-variant z-50">
+      <nav className="w-full px-6 md:px-container-padding h-16 flex items-center justify-between gap-6">
         <a href="#/" className="flex flex-col flex-shrink-0">
           <h1 className="font-headline-lg text-[24px] text-on-surface tracking-tight">
             G&M აქსესუარები
@@ -75,8 +78,23 @@ export default function SiteNav({ active = "კატალოგი" }) {
               </a>
             </>
           )}
+          {/* Icon lives in a child span: putting `material-symbols-outlined`
+              on the button itself would override `lg:hidden`'s display:none. */}
+          <button
+            className="lg:hidden p-2 text-on-surface"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label="მენიუ"
+            aria-expanded={mobileOpen}
+          >
+            <span className="material-symbols-outlined">
+              {mobileOpen ? 'close' : 'menu'}
+            </span>
+          </button>
         </div>
-      </div>
-    </nav>
+      </nav>
+      {mobileOpen && (
+        <MobileMenu links={navLinks} onNavigate={() => setMobileOpen(false)} />
+      )}
+    </header>
   )
 }

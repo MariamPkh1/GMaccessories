@@ -3,11 +3,24 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Global 80% scale — the "zoomed out" look, baked in. */
+  --app-zoom: 0.8;
+}
+
 html {
-  /* Global 80% scale — the "zoomed out" look, baked in.
-     `zoom` re-rasterizes at the smaller size, so text stays crisp
+  /* `zoom` re-rasterizes at the smaller size, so text stays crisp
      (unlike transform: scale). */
-  zoom: 0.8;
+  zoom: var(--app-zoom);
+}
+
+/* The root zoom also shrinks viewport units: Tailwind's `min-h-screen`
+   (100vh) ends up rendering at only 80% of the real viewport height, leaving
+   a blank strip under short pages. Dividing by the zoom restores true
+   full-height. Scoped under `html` purely to out-specify Tailwind's own rule
+   regardless of stylesheet order. */
+html .min-h-screen {
+  min-height: calc(100vh / var(--app-zoom));
 }
 
 body {

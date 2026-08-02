@@ -111,15 +111,17 @@ export default function AuthModal() {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        className="relative w-full max-w-md bg-white border border-outline-variant rounded shadow-lg p-6"
+        className="relative w-full max-w-md bg-white border border-outline-variant rounded shadow-lg p-6 pt-14"
         style={{ animation: 'modalIn 200ms cubic-bezier(0.23, 1, 0.32, 1) both' }}
       >
+        {/* Sits in its own space above the tab row — the tabs are flex-1 and
+            would otherwise run underneath this button and steal its clicks. */}
         <button
           onClick={closeLogin}
           aria-label="დახურვა"
-          className="absolute top-4 right-4 p-1 rounded text-secondary hover:bg-surface-container-low transition-colors"
+          className="absolute top-3 right-3 z-10 p-1.5 rounded text-error hover:bg-error-container transition-colors"
         >
-          <span className="material-symbols-outlined text-[20px]">close</span>
+          <span className="material-symbols-outlined text-[24px]">close</span>
         </button>
 
         <div className="flex border-b border-outline-variant mb-6">

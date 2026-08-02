@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import SearchBox from '../components/SearchBox'
 import AccountMenu from '../components/AccountMenu'
+import MobileMenu from '../components/MobileMenu'
 import { useAuth } from '../context/AuthContext'
 import { useStore } from '../store'
+import Footer from '../components/Footer'
 
 // Served from /public — bundled with the site so there's no dependency on an
 // external host (the originals were expiring signed CloudFront URLs).
@@ -40,19 +42,21 @@ const FAQ = [
   },
 ]
 
-function Navbar({ onOpenMobile }) {
+function Navbar() {
   const { user } = useAuth()
   const { cartCount, favoriteItems } = useStore()
+  const [mobileOpen, setMobileOpen] = useState(false)
   const navLinks = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
   const favCount = favoriteItems.length
   return (
-    <nav className="fixed top-0 left-0 w-full z-[60] bg-white/95 backdrop-blur-md border-b border-outline-variant px-container-padding h-16 flex justify-between items-center transition-all duration-300">
+    <header className="fixed top-0 left-0 w-full z-[60] bg-white/95 backdrop-blur-md border-b border-outline-variant transition-all duration-300">
+    <nav className="px-container-padding h-16 flex justify-between items-center">
       <div className="flex items-center">
         <a href="#/" className="font-headline-lg text-on-surface tracking-tight text-[24px]">
           G&M აქსესუარები
         </a>
       </div>
-      <div className="hidden md:flex items-center gap-8">
+      <div className="hidden lg:flex items-center gap-8">
         {navLinks.map((link) => (
           <a
             key={link.label}
@@ -96,14 +100,24 @@ function Navbar({ onOpenMobile }) {
             </a>
           </>
         )}
+        {/* Icon lives in a child span: putting `material-symbols-outlined`
+            on the button itself would override `lg:hidden`'s display:none. */}
         <button
-          className="md:hidden p-2 material-symbols-outlined text-on-surface"
-          onClick={onOpenMobile}
+          className="lg:hidden p-2 text-on-surface"
+          onClick={() => setMobileOpen((o) => !o)}
+          aria-label="მენიუ"
+          aria-expanded={mobileOpen}
         >
-          menu
+          <span className="material-symbols-outlined">
+            {mobileOpen ? 'close' : 'menu'}
+          </span>
         </button>
       </div>
     </nav>
+    {mobileOpen && (
+      <MobileMenu links={navLinks} onNavigate={() => setMobileOpen(false)} />
+    )}
+    </header>
   )
 }
 
@@ -217,106 +231,16 @@ function Faq() {
   )
 }
 
-function Footer() {
-  const socials = ["Facebook", "Instagram", "TikTok", "YouTube"]
-  return (
-    <footer className="mt-auto w-full py-8 bg-white border-t border-outline-variant">
-      <div className="flex flex-col md:flex-row justify-between items-center px-container-padding w-full gap-8">
-        <div className="flex flex-col items-center md:items-start gap-1">
-          <h4 className="font-headline-lg text-base text-on-surface">
-            G&M აქსესუარები
-          </h4>
-          <p className="font-label-sm text-label-sm normal-case tracking-normal text-on-surface-variant">
-            © {new Date().getFullYear()} G&M აქსესუარები. ყველა უფლება დაცულია.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-6">
-          {socials.map((s) => (
-            <a
-              key={s}
-              className="font-label-sm text-label-sm normal-case tracking-normal text-on-surface-variant hover:text-primary transition-colors"
-              href="#"
-            >
-              {s}
-            </a>
-          ))}
-        </div>
-        <a
-          className="font-label-sm text-label-sm normal-case tracking-normal text-on-surface hover:text-primary transition-colors"
-          href="tel:557783549"
-        >
-          557 78 35 49
-        </a>
-      </div>
-    </footer>
-  )
-}
-
-function MobileNav({ open, onClose }) {
-  const { user, openLogin, signOut } = useAuth()
-  const items = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
-  return (
-    <div
-      className={`fixed inset-0 bg-white z-[70] flex flex-col p-10 transition-transform duration-300 md:hidden ${
-        open ? "translate-x-0" : "translate-x-full"
-      }`}
-    >
-      <div className="flex justify-end mb-12">
-        <button className="material-symbols-outlined" onClick={onClose}>
-          close
-        </button>
-      </div>
-      <nav className="space-y-8 flex flex-col items-center">
-        {items.map((item, i) => (
-          <a
-            key={item.label}
-            className={`font-headline-lg text-2xl ${i === 0 ? "text-primary" : "text-on-surface"}`}
-            href={item.href}
-            onClick={onClose}
-          >
-            {item.label}
-          </a>
-        ))}
-      </nav>
-      <div className="mt-auto text-center">
-        {user ? (
-          <button
-            onClick={() => {
-              signOut()
-              onClose()
-            }}
-            className="bg-primary text-on-primary w-full py-3 rounded font-button-text"
-          >
-            გასვლა
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              openLogin()
-              onClose()
-            }}
-            className="bg-primary text-on-primary w-full py-3 rounded font-button-text"
-          >
-            შესვლა
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export default function Home() {
-  const [mobileOpen, setMobileOpen] = useState(false)
   return (
     <>
       <main className="min-h-screen flex flex-col">
-        <Navbar onOpenMobile={() => setMobileOpen(true)} />
+        <Navbar />
         <Hero />
         <About />
         <Faq />
         <Footer />
       </main>
-      <MobileNav open={mobileOpen} onClose={() => setMobileOpen(false)} />
     </>
   )
 }

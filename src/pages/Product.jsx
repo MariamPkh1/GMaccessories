@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
 import { fmt } from '../products'
+import Footer from '../components/Footer'
 
 function toEmbedUrl(url) {
   try {
@@ -210,41 +211,6 @@ function RelatedCard({ item }) {
         <p className="text-base font-bold text-on-surface">{fmt(item.price)}</p>
       </div>
     </a>
-  )
-}
-
-function Footer() {
-  const socials = ["Facebook", "Instagram", "TikTok", "YouTube"]
-  return (
-    <footer className="bg-white border-t border-outline-variant py-8">
-      <div className="w-full px-6 md:px-container-padding flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex flex-col items-center md:items-start gap-1">
-          <span className="font-headline-lg text-base text-on-surface">G&M აქსესუარები</span>
-          <p className="text-xs text-on-surface-variant">
-            © {new Date().getFullYear()} G&M აქსესუარები. ყველა უფლება დაცულია.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-6">
-          {socials.map((s) => (
-            <a
-              key={s}
-              className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {s}
-            </a>
-          ))}
-        </div>
-        <a
-          href="tel:557783549"
-          className="text-sm font-medium text-on-surface hover:text-primary transition-colors"
-        >
-          557 78 35 49
-        </a>
-      </div>
-    </footer>
   )
 }
 

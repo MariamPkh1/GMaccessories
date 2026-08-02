@@ -2,6 +2,7 @@ import { useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
 import { fmt } from '../products'
+import Footer from '../components/Footer'
 
 const DELIVERY = 10
 
@@ -167,38 +168,6 @@ function OrderSubmitted() {
         ჩემი შეკვეთების ნახვა
       </a>
     </div>
-  )
-}
-
-function Footer() {
-  const links = ["Facebook", "Instagram", "TikTok", "YouTube"]
-  return (
-    <footer className="bg-white border-t border-outline-variant mt-20">
-      <div className="w-full px-container-padding py-8 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex flex-col items-center md:items-start gap-1">
-          <span className="font-headline-lg text-base text-on-surface">G&M აქსესუარები</span>
-          <p className="text-xs text-on-surface-variant">
-            © {new Date().getFullYear()} G&M აქსესუარები. ყველა უფლება დაცულია.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-6">
-          {links.map((l) => (
-            <a
-              key={l}
-              className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {l}
-            </a>
-          ))}
-        </div>
-        <a href="tel:557783549" className="text-sm font-medium text-on-surface hover:text-primary transition-colors">
-          557 78 35 49
-        </a>
-      </div>
-    </footer>
   )
 }
 

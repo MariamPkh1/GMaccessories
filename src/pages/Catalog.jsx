@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store'
 import { CATEGORIES } from '../products'
 import SiteNav from '../components/SiteNav'
+import Footer from '../components/Footer'
 
 const ALL = "ყველა"
 const TABS = [ALL, ...CATEGORIES]
@@ -207,10 +208,15 @@ function ProductCard({ product }) {
             favorite
           </span>
         </button>
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center pb-4">
+        {/* `invisible` (not just opacity-0) so the hidden overlay is dropped
+            from hit-testing — an opacity-0 element still receives clicks, and
+            this one covers the whole image, which was stealing every click
+            meant for the heart button above it. The overlay stays
+            click-through; only the button inside it is interactive. */}
+        <div className="absolute inset-0 bg-black/20 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center pb-4 pointer-events-none">
           <button
             onClick={handleAddToCart}
-            className="bg-primary text-on-primary text-xs font-semibold px-4 py-2 rounded flex items-center gap-1.5"
+            className="bg-primary text-on-primary text-xs font-semibold px-4 py-2 rounded flex items-center gap-1.5 pointer-events-auto"
           >
             <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
             {added ? "დამატებულია" : "კალათაში დამატება"}
@@ -289,41 +295,6 @@ function Pagination({ page, totalPages, onChange }) {
         <span className="material-symbols-outlined text-[18px]">chevron_right</span>
       </button>
     </div>
-  )
-}
-
-function Footer() {
-  const socials = ["Facebook", "Instagram", "TikTok", "YouTube"]
-  return (
-    <footer className="border-t border-outline-variant bg-white mt-stack-lg">
-      <div className="flex flex-col md:flex-row justify-between items-center px-container-padding py-8 w-full gap-6">
-        <div className="flex flex-col gap-1 items-center md:items-start">
-          <h4 className="font-headline-lg text-base text-on-surface">G&M აქსესუარები</h4>
-          <p className="text-xs text-on-surface-variant">
-            © {new Date().getFullYear()} G&M აქსესუარები. ყველა უფლება დაცულია.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-          {socials.map((s) => (
-            <a
-              key={s}
-              className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {s}
-            </a>
-          ))}
-        </div>
-        <a
-          className="text-sm font-medium text-on-surface hover:text-primary transition-colors"
-          href="tel:557783549"
-        >
-          557 78 35 49
-        </a>
-      </div>
-    </footer>
   )
 }
 

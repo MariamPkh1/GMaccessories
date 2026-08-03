@@ -1,0 +1,17 @@
+# Netlify build config. The app lives at the repo root, so no `base` is set.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Vite 8 requires Node ^20.19 || >=22.12. Pinning avoids a build failure if
+  # Netlify's default image ships an older Node than this project needs.
+  NODE_VERSION = "22"
+
+# The app uses hash routing (#/catalog), so deep links already resolve to "/".
+# This catch-all is a safety net: it keeps direct URLs working if the router
+# is ever switched to history mode, and prevents stray 404s.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

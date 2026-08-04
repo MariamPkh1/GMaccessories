@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store'
-import { CATEGORIES } from '../products'
+import { CATEGORIES, displayPrice, minPrice, maxPrice } from '../products'
 import SiteNav from '../components/SiteNav'
 import Footer from '../components/Footer'
 
@@ -25,9 +25,12 @@ function SortDropdown({ sortBy, onChange }) {
         <span className="material-symbols-outlined text-[16px]">swap_vert</span>
         სორტირება
       </button>
+      {/* Panel is anchored left on mobile: these controls sit at the left edge
+          there, so a right-anchored panel hangs off-screen and gets clipped.
+          Right-anchored from lg up, where the controls are right-aligned. */}
       {open && (
         <div
-          className="absolute top-full right-0 mt-2 w-64 bg-white border border-outline-variant shadow-lg z-[80]"
+          className="absolute top-full left-0 lg:left-auto lg:right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white border border-outline-variant shadow-lg z-[80]"
           onMouseLeave={() => setOpen(false)}
         >
           {SORT_OPTIONS.map((opt) => (
@@ -88,32 +91,34 @@ function FilterDropdown({ priceRange, onApply }) {
       </button>
       {open && (
         <div
-          className="absolute top-full right-0 mt-2 w-72 bg-white border border-outline-variant shadow-lg z-[80] p-6"
+          className="absolute top-full left-0 lg:left-auto lg:right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white border border-outline-variant shadow-lg z-[80] p-4 sm:p-6"
           onMouseLeave={() => setOpen(false)}
         >
           <p className="text-xs font-medium text-secondary uppercase tracking-wider mb-4">
             ფასი (₾)
           </p>
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-2 mb-5">
             <input
               type="number"
               min="0"
               value={min}
               onChange={(e) => setMin(e.target.value)}
               placeholder="დან"
-              className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+              className="w-full min-w-0 border border-outline-variant rounded px-2.5 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
             />
-            <span className="text-secondary">—</span>
+            <span className="text-secondary shrink-0">—</span>
             <input
               type="number"
               min="0"
               value={max}
               onChange={(e) => setMax(e.target.value)}
               placeholder="მდე"
-              className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+              className="w-full min-w-0 border border-outline-variant rounded px-2.5 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
             />
           </div>
-          <div className="flex gap-3">
+          {/* Stacked on narrow panels — the two Georgian labels don't fit side
+              by side once the panel is clamped to the viewport width. */}
+          <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={apply}
               className="flex-grow bg-primary text-on-primary py-2 rounded text-sm font-semibold transition-opacity hover:opacity-90"
@@ -122,7 +127,7 @@ function FilterDropdown({ priceRange, onApply }) {
             </button>
             <button
               onClick={clear}
-              className="px-4 py-2 border border-outline-variant rounded text-sm font-medium transition-colors hover:border-on-surface"
+              className="px-4 py-2 border border-outline-variant rounded text-sm font-medium transition-colors hover:border-on-surface whitespace-nowrap"
             >
               გასუფთავება
             </button>
@@ -137,8 +142,29 @@ function CatalogHeader({ activeCat, onChange, sortBy, onSortChange, priceRange, 
   return (
     <header className="mb-8">
       <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">კატალოგი</h1>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-outline-variant">
-        <div className="flex items-center gap-1 overflow-x-auto pb-1">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 pb-6 border-b border-outline-variant">
+        {/* Mobile/tablet: a single select. With 9 categories the tab row
+            overflowed the screen and scrolled sideways, hiding most of them. */}
+        <div className="relative lg:hidden">
+          <select
+            value={activeCat}
+            onChange={(e) => onChange(e.target.value)}
+            aria-label="კატეგორია"
+            className="w-full appearance-none border border-outline-variant rounded pl-4 pr-10 py-2.5 text-sm font-medium text-on-surface bg-white focus:outline-none focus:border-primary transition-colors"
+          >
+            {TABS.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-secondary text-[20px] pointer-events-none">
+            expand_more
+          </span>
+        </div>
+
+        {/* Desktop: keep the underlined tab row — there's room for it. */}
+        <div className="hidden lg:flex items-center gap-1 overflow-x-auto pb-1">
           {TABS.map((cat) => (
             <button
               key={cat}
@@ -228,7 +254,7 @@ function ProductCard({ product }) {
           {product.category}
         </span>
         <h3 className="text-sm font-semibold text-on-surface truncate mb-2">{product.title_ka}</h3>
-        <p className="text-base font-bold text-on-surface">{product.price} ₾</p>
+        <p className="text-base font-bold text-on-surface">{displayPrice(product).text}</p>
       </div>
     </article>
   )
@@ -298,9 +324,17 @@ function Pagination({ page, totalPages, onChange }) {
   )
 }
 
-export default function Catalog() {
+export default function Catalog({ initialCategory = null }) {
   const { products, productsLoading } = useStore()
-  const [activeCat, setActiveCat] = useState(ALL)
+  // The URL is the single source of truth for the selected category, so the
+  // nav dropdown, the tab row and a pasted link can't disagree. An unknown
+  // category (e.g. a renamed one in an old bookmark) falls back to "all"
+  // rather than rendering an empty page.
+  const activeCat = initialCategory && TABS.includes(initialCategory) ? initialCategory : ALL
+
+  const setActiveCat = (cat) => {
+    window.location.hash = cat === ALL ? '#/catalog' : `#/catalog/${encodeURIComponent(cat)}`
+  }
   const [sortBy, setSortBy] = useState("newest")
   const [priceRange, setPriceRange] = useState({ min: "", max: "" })
   const [page, setPage] = useState(1)
@@ -309,12 +343,15 @@ export default function Catalog() {
     let list = products.filter(
       (p) => p.in_stock !== false && (activeCat === ALL || p.category === activeCat),
     )
-    if (priceRange.min !== "") list = list.filter((p) => p.price >= Number(priceRange.min))
-    if (priceRange.max !== "") list = list.filter((p) => p.price <= Number(priceRange.max))
+    // With per-size pricing a product spans a range, so it matches the filter
+    // when ANY of its size options falls inside the requested bounds.
+    if (priceRange.min !== "") list = list.filter((p) => maxPrice(p) >= Number(priceRange.min))
+    if (priceRange.max !== "") list = list.filter((p) => minPrice(p) <= Number(priceRange.max))
 
+    // Sort on the "from" price, matching what the card actually shows.
     list = [...list]
-    if (sortBy === "price-asc") list.sort((a, b) => a.price - b.price)
-    else if (sortBy === "price-desc") list.sort((a, b) => b.price - a.price)
+    if (sortBy === "price-asc") list.sort((a, b) => minPrice(a) - minPrice(b))
+    else if (sortBy === "price-desc") list.sort((a, b) => minPrice(b) - minPrice(a))
     else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
     return list

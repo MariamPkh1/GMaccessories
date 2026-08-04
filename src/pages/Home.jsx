@@ -2,14 +2,14 @@ import { useState } from 'react'
 import SearchBox from '../components/SearchBox'
 import AccountMenu from '../components/AccountMenu'
 import MobileMenu from '../components/MobileMenu'
+import ABOUT_IMG from '../assets/newlogo.jpg'
 import { useAuth } from '../context/AuthContext'
 import { useStore } from '../store'
 import Footer from '../components/Footer'
 
-// Served from /public — bundled with the site so there's no dependency on an
-// external host (the originals were expiring signed CloudFront URLs).
+// Hero is served from /public. The about image is imported from src/assets so
+// Vite fingerprints it for cache-busting.
 const HERO_IMG = "/images/hero-automotive.webp"
-const ABOUT_IMG = "/images/about-section.webp"
 
 // Favorites/cart/orders are auth-gated, so they only show up once the user
 // is signed in — no point advertising links that just bounce back to login.
@@ -123,12 +123,15 @@ function Navbar() {
 
 function Hero() {
   return (
-    <section className="relative w-full h-[85vh] min-h-[500px] flex items-end overflow-hidden">
+    <section className="relative w-full h-hero flex items-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img className="w-full h-full object-cover" src={HERO_IMG} alt="G&M აქსესუარები" />
         <div className="absolute inset-0 bg-black/50" />
       </div>
-      <div className="relative z-10 w-full px-container-padding pb-24 md:pb-32">
+      {/* pt-16 offsets the fixed nav that overlays the top of the hero, so the
+          text is optically centred in the *visible* area rather than sitting
+          slightly low. */}
+      <div className="relative z-10 w-full px-container-padding pt-16">
         <div className="max-w-2xl">
           <h2 className="font-display-lg text-display-lg text-white mb-4 leading-none">
             G&M აქსესუარები
@@ -152,12 +155,20 @@ function Hero() {
 function About() {
   return (
     <section className="py-24 md:py-32 px-container-padding w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-      <div className="relative overflow-hidden rounded order-2 md:order-1">
-        <img
-          className="w-full h-[350px] md:h-[450px] object-cover"
-          src={ABOUT_IMG}
-          alt="G&M showroom"
-        />
+      {/* The logo is square (2024x2024), so the frame is square too — then
+          object-cover fills it exactly with no cropping and no dead space.
+          Width is capped so it doesn't balloon on wide screens. */}
+      {/* Centred within its own grid column on desktop — left-aligned it hugged
+          the page edge and left a large void before the text. Mobile keeps the
+          base `justify-center`, so it's unaffected. */}
+      <div className="order-2 md:order-1 flex justify-center">
+        <div className="relative w-full max-w-[420px] aspect-square overflow-hidden rounded border border-outline-variant">
+          <img
+            className="w-full h-full object-cover"
+            src={ABOUT_IMG}
+            alt="G&M აქსესუარები"
+          />
+        </div>
       </div>
       <div className="order-1 md:order-2">
         <span className="font-label-sm text-label-sm text-secondary block mb-3">
@@ -174,6 +185,18 @@ function About() {
           <p>
             ჩვენი სერვისი მოიცავს სწრაფ მოძიებასა და მიწოდებას ქუთაისსა და მთელი
             საქართველოს მასშტაბით, რაც გიზოგავთ დროსა და ენერგიას.
+          </p>
+          <p>
+            სწრაფი და დეტალური პასუხისთვის კონკრეტული პროდუქტის შესახებ მომწერეთ
+            ვაცაპზე{' '}
+            <a
+              href="https://wa.me/995557783549"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-primary hover:underline whitespace-nowrap"
+            >
+              +995 557 78 35 49
+            </a>
           </p>
         </div>
       </div>

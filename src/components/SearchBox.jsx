@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store'
+import { displayPrice } from '../products'
 
 // Live product search. Included in every nav so search works everywhere.
 export default function SearchBox() {
@@ -60,7 +61,7 @@ export default function SearchBox() {
                   </p>
                 </div>
                 <span className="font-body-md text-body-md text-primary flex-shrink-0">
-                  {p.price} ₾
+                  {displayPrice(p).text}
                 </span>
               </button>
             ))

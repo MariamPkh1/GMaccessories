@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import AdminLayout from './AdminLayout'
 import { useStore } from '../../store'
-import { CATEGORIES } from '../../products'
+import { CATEGORIES, sizeEntries } from '../../products'
 import { compressAndUploadImage, deleteProductImages } from '../../lib/productImages'
 
 const MAX_IMAGES = 5
@@ -26,8 +26,13 @@ const labelClass = 'text-sm font-medium text-on-surface mb-1.5 block'
 export default function ProductForm({ mode, id }) {
   const { getProduct, addProduct, updateProduct } = useStore()
   const existing = mode === 'edit' ? getProduct(id) : null
-  const [form, setForm] = useState(() => (existing ? { ...emptyForm, ...existing } : emptyForm))
+  // sizeEntries normalises legacy plain-string sizes into { size, price } so
+  // editing an older product doesn't silently drop its sizes.
+  const [form, setForm] = useState(() =>
+    existing ? { ...emptyForm, ...existing, sizes: sizeEntries(existing) } : emptyForm,
+  )
   const [sizeInput, setSizeInput] = useState('')
+  const [sizePriceInput, setSizePriceInput] = useState('')
   const [specKey, setSpecKey] = useState('')
   const [specValue, setSpecValue] = useState('')
   const [saving, setSaving] = useState(false)
@@ -86,16 +91,26 @@ export default function ProductForm({ mode, id }) {
 
   const addSize = (e) => {
     e.preventDefault()
-    const v = sizeInput.trim()
-    if (!v || form.sizes.includes(v)) return
-    setField('sizes', [...form.sizes, v])
+    const name = sizeInput.trim()
+    if (!name || form.sizes.some((s) => s.size === name)) return
+    // Blank price falls back to the base price, so an owner who doesn't need
+    // per-size pricing can still just type names and move on.
+    const price = sizePriceInput.trim() === '' ? Number(form.price) || 0 : Number(sizePriceInput)
+    setField('sizes', [...form.sizes, { size: name, price }])
     setSizeInput('')
+    setSizePriceInput('')
   }
 
-  const removeSize = (v) =>
+  const removeSize = (name) =>
     setField(
       'sizes',
-      form.sizes.filter((s) => s !== v),
+      form.sizes.filter((s) => s.size !== name),
+    )
+
+  const updateSizePrice = (idx, value) =>
+    setField(
+      'sizes',
+      form.sizes.map((s, i) => (i === idx ? { ...s, price: value } : s)),
     )
 
   const addSpec = (e) => {
@@ -124,7 +139,23 @@ export default function ProductForm({ mode, id }) {
     }
     setError('')
     setSaving(true)
-    const payload = { ...form, price: Number(form.price) }
+
+    // Coerce size prices to numbers, defaulting a blank/invalid one to the base
+    // price rather than saving NaN.
+    const basePrice = Number(form.price)
+    const normalisedSizes = form.sizes.map((s) => {
+      const p = Number(s.price)
+      return { size: s.size, price: Number.isFinite(p) && p > 0 ? p : basePrice }
+    })
+
+    // `price` doubles as the catalog's "from" value, so keep it equal to the
+    // cheapest size. That way sorting and price filtering keep working off a
+    // single column and can't drift out of sync with the sizes.
+    const effectivePrice = normalisedSizes.length
+      ? Math.min(...normalisedSizes.map((s) => s.price))
+      : basePrice
+
+    const payload = { ...form, price: effectivePrice, sizes: normalisedSizes }
     try {
       if (mode === 'edit') {
         await updateProduct(id, payload)
@@ -251,10 +282,45 @@ export default function ProductForm({ mode, id }) {
           />
         </div>
 
-        {/* Sizes */}
+        {/* Sizes + per-size price */}
         <div>
-          <label className={labelClass}>ზომა</label>
-          <p className="text-xs text-secondary mb-3">თუ პროდუქტს ზომა არ სჭირდება, გამოტოვეთ</p>
+          <label className={labelClass}>ზომები და ფასები</label>
+          <p className="text-xs text-secondary mb-3">
+            თუ პროდუქტს ზომა არ სჭირდება, გამოტოვეთ. ყოველ ზომას შეიძლება ჰქონდეს
+            განსხვავებული ფასი — ცარიელი ფასი აიღებს ძირითად ფასს.
+          </p>
+
+          {form.sizes.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {form.sizes.map((s, i) => (
+                <div key={s.size} className="flex items-center gap-2">
+                  <span className="flex-1 px-3 py-2 text-sm border border-outline-variant rounded bg-surface-container-low">
+                    {s.size}
+                  </span>
+                  <div className="relative w-32">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={s.price}
+                      onChange={(e) => updateSizePrice(i, e.target.value)}
+                      className={`${inputClass} pr-7`}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-secondary">₾</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeSize(s.size)}
+                    className="p-2 text-secondary hover:text-error transition-colors"
+                    aria-label={`წაშალე ${s.size}`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex gap-2">
             <input
               value={sizeInput}
@@ -262,9 +328,24 @@ export default function ProductForm({ mode, id }) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') addSize(e)
               }}
-              placeholder="ზომა შეიყვანეთ და Enter-ს დააჭირეთ"
+              placeholder="ზომა (მაგ. 40x60 სმ)"
               className={`flex-1 ${inputClass}`}
             />
+            <div className="relative w-32">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={sizePriceInput}
+                onChange={(e) => setSizePriceInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addSize(e)
+                }}
+                placeholder="ფასი"
+                className={`${inputClass} pr-7`}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-secondary">₾</span>
+            </div>
             <button
               type="button"
               onClick={addSize}
@@ -273,20 +354,12 @@ export default function ProductForm({ mode, id }) {
               <span className="material-symbols-outlined text-[18px]">add</span>
             </button>
           </div>
+
           {form.sizes.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {form.sizes.map((s) => (
-                <span
-                  key={s}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium border border-outline-variant bg-surface-container-low rounded"
-                >
-                  {s}
-                  <button type="button" onClick={() => removeSize(s)} className="text-secondary hover:text-error">
-                    <span className="material-symbols-outlined text-[14px]">close</span>
-                  </button>
-                </span>
-              ))}
-            </div>
+            <p className="text-xs text-secondary mt-2">
+              კატალოგში გამოჩნდება როგორც „დან{' '}
+              {Math.min(...form.sizes.map((s) => Number(s.price) || Number(form.price) || 0)).toFixed(2)} ₾“
+            </p>
           )}
         </div>
 

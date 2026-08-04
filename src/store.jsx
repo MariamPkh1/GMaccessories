@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
 import { useAuth } from './context/AuthContext'
+import { priceForSize } from './products'
 
 const StoreContext = createContext(null)
 
@@ -187,14 +188,26 @@ export function StoreProvider({ children }) {
     await matchSize(query, size)
   }
 
+  // `unitPrice` is resolved from the chosen size rather than the product's base
+  // price, so per-size pricing flows through the cart, the totals and the order
+  // snapshot from a single place.
   const cartItems = cartRows
-    .map((r) => ({ productId: r.product_id, size: r.size, quantity: r.quantity, product: getProduct(r.product_id) }))
+    .map((r) => {
+      const product = getProduct(r.product_id)
+      return {
+        productId: r.product_id,
+        size: r.size,
+        quantity: r.quantity,
+        product,
+        unitPrice: product ? priceForSize(product, r.size) : 0,
+      }
+    })
     .filter((i) => i.product)
 
   const favoriteItems = favoriteIds.map((id) => getProduct(id)).filter(Boolean)
 
   const cartCount = cartRows.reduce((sum, r) => sum + r.quantity, 0)
-  const cartSubtotal = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
+  const cartSubtotal = cartItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
 
   // --- Orders ---------------------------------------------------------------
   const submitOrder = async ({ contactName = '', contactPhone = '', notes = '' } = {}) => {
@@ -213,12 +226,14 @@ export function StoreProvider({ children }) {
       .single()
     if (orderError) throw orderError
 
+    // Snapshot the price of the *chosen size* — the owner may reprice a size
+    // during the ~month sourcing window, and a past order must not change.
     const itemRows = cartItems.map((i) => ({
       order_id: order.id,
       product_id: i.productId,
       size: i.size,
       quantity: i.quantity,
-      price_at_order: i.product.price,
+      price_at_order: i.unitPrice,
     }))
     const { error: itemsError } = await supabase.from('order_items').insert(itemRows)
     if (itemsError) throw itemsError

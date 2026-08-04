@@ -1,6 +1,6 @@
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
-import { fmt } from '../products'
+import { displayPrice } from '../products'
 import Footer from '../components/Footer'
 
 function FavoriteCard({ item, onAddToCart, onRemove }) {
@@ -33,7 +33,7 @@ function FavoriteCard({ item, onAddToCart, onRemove }) {
             {item.category}
           </span>
           <h3 className="text-sm font-semibold text-on-surface truncate mb-2">{item.title_ka}</h3>
-          <p className="text-base font-bold text-on-surface">{fmt(item.price)}</p>
+          <p className="text-base font-bold text-on-surface">{displayPrice(item).text}</p>
         </div>
       </a>
       <div className="px-4 pb-4">

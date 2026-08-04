@@ -23,6 +23,16 @@ html .min-h-screen {
   min-height: calc(100vh / var(--app-zoom));
 }
 
+/* Landing hero. Height is expressed as the fraction of the *real* viewport we
+   want it to occupy, then divided back out by the zoom (same issue as above —
+   a raw 85vh only rendered at 68% of the screen).
+   82% is tuned so the logo below peeks just far enough to hint at more
+   content without showing the whole thing. */
+.h-hero {
+  height: calc(88vh / var(--app-zoom));
+  min-height: calc(480px / var(--app-zoom));
+}
+
 body {
   margin: 0;
   background-color: #ffffff; /* surface / white canvas */

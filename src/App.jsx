@@ -20,7 +20,14 @@ function getPath() {
 function matchRoute(path) {
   const segments = path.split('/').filter(Boolean)
   if (segments.length === 0) return { name: 'home', params: {} }
-  if (segments[0] === 'catalog') return { name: 'catalog', params: {} }
+  // #/catalog or #/catalog/<category> — the category is URL-encoded because
+  // the labels are Georgian (and one contains a space and an ampersand).
+  if (segments[0] === 'catalog') {
+    return {
+      name: 'catalog',
+      params: { category: segments[1] ? decodeURIComponent(segments[1]) : null },
+    }
+  }
   if (segments[0] === 'product' && segments[1]) return { name: 'product', params: { id: segments[1] } }
   if (segments[0] === 'favorites') return { name: 'favorites', params: {} }
   if (segments[0] === 'cart') return { name: 'cart', params: {} }
@@ -54,7 +61,9 @@ function Router() {
 
   switch (route.name) {
     case 'catalog':
-      return <Catalog />
+      // key forces a remount when the category in the URL changes, so the
+      // page's filter/pagination state starts clean for each category.
+      return <Catalog key={route.params.category || 'all'} initialCategory={route.params.category} />
     case 'product':
       return <Product id={route.params.id} />
     case 'favorites':

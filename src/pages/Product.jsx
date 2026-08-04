@@ -1,73 +1,51 @@
 import { useMemo, useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
-import { fmt } from '../products'
+import { fmt, sizeEntries, priceForSize, hasVariablePricing, displayPrice } from '../products'
 import Footer from '../components/Footer'
 
-function toEmbedUrl(url) {
-  try {
-    const u = new URL(url)
-    if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) {
-      return `https://www.youtube.com/embed/${u.searchParams.get('v')}`
-    }
-    if (u.hostname.includes('youtu.be')) {
-      return `https://www.youtube.com/embed${u.pathname}`
-    }
-    return url
-  } catch {
-    return url
-  }
+// Videos open on the platform they're hosted on rather than being embedded:
+// Instagram and Facebook refuse to be iframed, so an embed would silently show
+// an empty box for anything that isn't YouTube.
+function VideoLink({ url }) {
+  if (!url) return null
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2.5 w-full border border-outline-variant rounded px-4 py-3 text-sm font-semibold text-on-surface transition-colors hover:border-primary hover:text-primary"
+    >
+      <span className="material-symbols-outlined text-[20px]">play_circle</span>
+      დააწკაპე ვიდეოს სანახავად
+      <span className="material-symbols-outlined text-[16px] ml-auto text-secondary">open_in_new</span>
+    </a>
+  )
 }
 
 function Gallery({ product }) {
   const images = product.image_urls?.length ? product.image_urls : ['']
   const [mainSrc, setMainSrc] = useState(images[0])
-  const [showVideo, setShowVideo] = useState(false)
 
   return (
     <div className="space-y-4">
       <div className="aspect-square border border-outline-variant rounded overflow-hidden bg-surface-container-low">
-        {showVideo && product.video_url ? (
-          <iframe
-            className="w-full h-full"
-            src={toEmbedUrl(product.video_url)}
-            title={product.title_ka}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        ) : (
-          <img className="w-full h-full object-cover" src={mainSrc} alt={product.title_ka} />
-        )}
+        <img className="w-full h-full object-cover" src={mainSrc} alt={product.title_ka} />
       </div>
 
-      {(images.length > 1 || product.video_url) && (
+      {images.length > 1 && (
         <div className="flex gap-3 overflow-x-auto">
           {images.map((img, i) => (
             <button
               key={i}
-              onClick={() => {
-                setMainSrc(img)
-                setShowVideo(false)
-              }}
+              onClick={() => setMainSrc(img)}
               className={`w-20 h-20 border rounded overflow-hidden bg-surface-container-low shrink-0 transition-colors ${
-                !showVideo && mainSrc === img ? "border-primary" : "border-outline-variant"
+                mainSrc === img ? "border-primary" : "border-outline-variant"
               }`}
             >
               <img className="w-full h-full object-cover" src={img} alt="" loading="lazy" />
             </button>
           ))}
-          {product.video_url && (
-            <button
-              onClick={() => setShowVideo(true)}
-              className={`w-20 h-20 border rounded overflow-hidden bg-surface-container-low flex items-center justify-center shrink-0 transition-colors ${
-                showVideo ? "border-primary" : "border-outline-variant"
-              }`}
-            >
-              <div className="w-8 h-8 rounded-full border-2 border-on-surface flex items-center justify-center">
-                <div className="w-0 h-0 border-l-[8px] border-l-on-surface border-y-[5px] border-y-transparent ml-1" />
-              </div>
-            </button>
-          )}
         </div>
       )}
     </div>
@@ -76,11 +54,16 @@ function Gallery({ product }) {
 
 function Details({ product }) {
   const { addToCart, toggleFavorite, isFavorite } = useStore()
-  const hasSizes = product.sizes?.length > 0
+  const sizeOptions = sizeEntries(product)
+  const hasSizeOptions = sizeOptions.length > 0
   const hasSpecs = product.specifications?.length > 0
-  const [size, setSize] = useState(hasSizes ? product.sizes[0] : null)
+  const [size, setSize] = useState(hasSizeOptions ? sizeOptions[0].size : null)
   const [added, setAdded] = useState(false)
   const favorited = isFavorite(product.id)
+
+  // Shown price tracks the selected size.
+  const shownPrice = hasSizeOptions ? priceForSize(product, size) : Number(product.price) || 0
+  const variablePricing = hasVariablePricing(product)
 
   const handleAddToCart = () => {
     addToCart(product.id, { size, quantity: 1 })
@@ -104,21 +87,28 @@ function Details({ product }) {
         )}
       </div>
 
-      <p className="text-3xl font-bold text-on-surface">{fmt(product.price)}</p>
+      <p className="text-3xl font-bold text-on-surface">{fmt(shownPrice)}</p>
 
-      {hasSizes && (
+      {hasSizeOptions && (
         <div>
           <span className="text-sm font-semibold text-on-surface mb-3 block">ზომა:</span>
           <div className="flex flex-wrap gap-2">
-            {product.sizes.map((s) => (
+            {sizeOptions.map((opt) => (
               <button
-                key={s}
-                onClick={() => setSize(s)}
-                className={`px-4 py-2 text-sm font-medium border rounded transition-colors ${
-                  size === s ? "border-primary text-primary bg-primary/5" : "border-outline-variant text-on-surface hover:border-on-surface"
+                key={opt.size}
+                onClick={() => setSize(opt.size)}
+                className={`px-4 py-2 text-sm font-medium border rounded transition-colors text-left ${
+                  size === opt.size
+                    ? "border-primary text-primary bg-primary/5"
+                    : "border-outline-variant text-on-surface hover:border-on-surface"
                 }`}
               >
-                {s}
+                {opt.size}
+                {/* Only surface per-size prices when they actually differ,
+                    otherwise it's noise on every button. */}
+                {variablePricing && (
+                  <span className="block text-xs text-secondary mt-0.5">{fmt(opt.price)}</span>
+                )}
               </button>
             ))}
           </div>
@@ -150,6 +140,8 @@ function Details({ product }) {
           </span>
           {favorited ? "ფავორიტებშია" : "ფავორიტებში დამატება"}
         </button>
+
+        <VideoLink url={product.video_url} />
       </div>
 
       <div>
@@ -208,7 +200,7 @@ function RelatedCard({ item }) {
       </div>
       <div className="p-4">
         <h4 className="text-sm font-semibold text-on-surface truncate mb-2">{item.title_ka}</h4>
-        <p className="text-base font-bold text-on-surface">{fmt(item.price)}</p>
+        <p className="text-base font-bold text-on-surface">{displayPrice(item).text}</p>
       </div>
     </a>
   )

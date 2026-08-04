@@ -7,7 +7,8 @@ import Footer from '../components/Footer'
 const DELIVERY = 10
 
 function CartItem({ item, onQty, onRemove }) {
-  const { product, size, quantity } = item
+  // unitPrice comes from the store already resolved for the chosen size.
+  const { product, size, quantity, unitPrice } = item
   return (
     <div className="flex gap-4 border border-outline-variant rounded p-4 bg-white">
       <div className="w-24 h-24 shrink-0 border border-outline-variant rounded overflow-hidden bg-surface-container-low">
@@ -48,7 +49,7 @@ function CartItem({ item, onQty, onRemove }) {
               <span className="material-symbols-outlined text-[16px] text-secondary">add</span>
             </button>
           </div>
-          <p className="text-base font-bold text-on-surface">{fmt(product.price * quantity)}</p>
+          <p className="text-base font-bold text-on-surface">{fmt(unitPrice * quantity)}</p>
         </div>
       </div>
     </div>

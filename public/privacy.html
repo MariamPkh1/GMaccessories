@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<!--
+  Deliberately a standalone static file rather than a hash route in the SPA.
+
+  Facebook (and any other crawler) fetches this URL server-side, and a fragment
+  like /#/privacy is never sent to the server -- the crawler would receive the
+  empty SPA shell and see no policy text. A real file at /privacy.html always
+  serves the actual content, with or without JavaScript.
+-->
+<html lang="ka">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>კონფიდენციალურობის პოლიტიკა — G&M აქსესუარები</title>
+    <meta
+      name="description"
+      content="G&M აქსესუარები — როგორ ვაგროვებთ, ვიყენებთ და ვიცავთ თქვენს პერსონალურ მონაცემებს."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* The rest of the site renders at 80% via `zoom`; matching it here keeps
+         type sizes consistent when navigating between the two. */
+      html {
+        zoom: 0.8;
+      }
+      :root {
+        --navy: #1b2a4a;
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f9fafb;
+        color: var(--ink);
+        font-family: "Noto Sans Georgian", system-ui, sans-serif;
+        line-height: 1.75;
+      }
+      header {
+        background: var(--navy);
+        color: #fff;
+        padding: 28px 24px;
+      }
+      header .inner,
+      main {
+        max-width: 820px;
+        margin: 0 auto;
+      }
+      header a {
+        color: #c7d2e4;
+        text-decoration: none;
+        font-size: 13px;
+      }
+      header a:hover {
+        color: #fff;
+      }
+      h1 {
+        margin: 10px 0 4px;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+      .updated {
+        margin: 0;
+        font-size: 13px;
+        color: #c7d2e4;
+      }
+      main {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 32px;
+        margin-top: 28px;
+        margin-bottom: 48px;
+      }
+      h2 {
+        font-size: 17px;
+        font-weight: 600;
+        margin: 32px 0 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      main > h2:first-of-type {
+        margin-top: 0;
+      }
+      p,
+      li {
+        font-size: 15px;
+      }
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin-bottom: 7px;
+      }
+      strong {
+        font-weight: 600;
+      }
+      a {
+        color: var(--navy);
+      }
+      .callout {
+        border-left: 3px solid var(--navy);
+        background: #f9fafb;
+        padding: 14px 16px;
+        margin: 18px 0;
+        font-size: 15px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        background: #f9fafb;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      footer {
+        max-width: 820px;
+        margin: 0 auto 48px;
+        font-size: 13px;
+        color: var(--muted);
+        padding: 0 4px;
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 22px 18px;
+          margin-left: 14px;
+          margin-right: 14px;
+        }
+        header {
+          padding: 22px 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="inner">
+        <a href="/">← G&amp;M აქსესუარები</a>
+        <h1>კონფიდენციალურობის პოლიტიკა</h1>
+        <p class="updated">ბოლო განახლება: 5 აგვისტო 2026</p>
+      </div>
+    </header>
+
+    <main>
+      <p>
+        ეს დოკუმენტი აღწერს, თუ რომელ პერსონალურ მონაცემებს ვაგროვებთ საიტზე
+        <strong>G&amp;M აქსესუარები</strong>, რისთვის ვიყენებთ მათ და როგორ შეგიძლიათ
+        მათი წაშლა მოითხოვოთ.
+      </p>
+
+      <div class="callout">
+        <strong>საიტზე გადახდა არ ხდება.</strong> ჩვენ არ ვაგროვებთ და არ ვინახავთ
+        ბარათის ან საბანკო მონაცემებს. შეკვეთა არის მხოლოდ <strong>მოთხოვნა</strong> —
+        შემდეგ ჩვენ პირადად გიკავშირდებით.
+      </div>
+
+      <h2>რომელ მონაცემებს ვაგროვებთ</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>მონაცემი</th>
+            <th>როდის</th>
+            <th>რისთვის</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ელ. ფოსტა</td>
+            <td>რეგისტრაციისას</td>
+            <td>ავტორიზაცია და შეკვეთაზე დაკავშირება</td>
+          </tr>
+          <tr>
+            <td>სახელი</td>
+            <td>Google/Facebook-ით შესვლისას ან შეკვეთის გაფორმებისას</td>
+            <td>შეკვეთის იდენტიფიცირება</td>
+          </tr>
+          <tr>
+            <td>ტელეფონის ნომერი</td>
+            <td>შეკვეთის გაფორმებისას</td>
+            <td>შეკვეთაზე დაკავშირება</td>
+          </tr>
+          <tr>
+            <td>შეკვეთების ისტორია, კალათა, ფავორიტები</td>
+            <td>საიტით სარგებლობისას</td>
+            <td>რომ დაბრუნებისას შენახული დაგხვდეთ</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        არ ვაგროვებთ ბარათის მონაცემებს, პირად დოკუმენტებს და არ ვიყენებთ თქვენს
+        მონაცემებს რეკლამის მიზნობრივი ჩვენებისთვის.
+      </p>
+
+      <h2>Google-ითა და Facebook-ით შესვლა</h2>
+      <p>
+        თუ ირჩევთ <strong>„გაგრძელება Google-ით“</strong> ან
+        <strong>„გაგრძელება Facebook-ით“</strong>, ჩვენ ამ სერვისებისგან ვიღებთ
+        მხოლოდ თქვენს <strong>ელ. ფოსტას, სახელს და პროფილის სურათს</strong>.
+        ჩვენ არ ვიღებთ თქვენს პაროლს, მეგობრების სიას, პოსტებს ან შეტყობინებებს,
+        და არაფერს ვაქვეყნებთ თქვენი სახელით.
+      </p>
+
+      <h2>ვის ვუზიარებთ</h2>
+      <p>
+        ჩვენ არ ვყიდით თქვენს მონაცემებს. ისინი მუშავდება მხოლოდ იმ სერვისებში,
+        რომლებზეც საიტი მუშაობს:
+      </p>
+      <ul>
+        <li><strong>Supabase</strong> — მონაცემთა ბაზა, ავტორიზაცია და სურათების შენახვა</li>
+        <li><strong>Netlify</strong> — საიტის ჰოსტინგი</li>
+        <li><strong>Google / Facebook</strong> — მხოლოდ იმ შემთხვევაში, თუ თავად აირჩევთ მათით შესვლას</li>
+        <li><strong>Resend</strong> — შეკვეთის შესახებ შეტყობინების გამოგზავნა ჩვენს ელ. ფოსტაზე</li>
+      </ul>
+
+      <h2>რამდენ ხანს ვინახავთ</h2>
+      <p>
+        თქვენს მონაცემებს ვინახავთ მანამ, სანამ გაქვთ ანგარიში ჩვენს საიტზე.
+        ანგარიშის წაშლის მოთხოვნის შემდეგ მონაცემები იშლება. შეკვეთების ისტორია
+        შესაძლოა შენარჩუნდეს ბუღალტრული აღრიცხვისთვის საჭირო ვადით.
+      </p>
+
+      <h2 id="delete">როგორ წაშალოთ თქვენი მონაცემები</h2>
+      <p>
+        თქვენ გაქვთ უფლება მოითხოვოთ თქვენი მონაცემების <strong>ნახვა,
+        შესწორება ან სრული წაშლა</strong>. ამისთვის მოგვწერეთ:
+      </p>
+      <ul>
+        <li>
+          WhatsApp:
+          <a href="https://wa.me/995557783549" target="_blank" rel="noopener noreferrer"
+            >+995 557 78 35 49</a
+          >
+        </li>
+      </ul>
+      <p>
+        მოთხოვნაში მიუთითეთ ის ელ. ფოსტა, რომლითაც დარეგისტრირდით. მოთხოვნას
+        განვიხილავთ <strong>30 დღის განმავლობაში</strong> და წაშლის დასრულების
+        შემდეგ დაგიდასტურებთ.
+      </p>
+
+      <h2>Cookie-ები</h2>
+      <p>
+        საიტი ინახავს მხოლოდ ტექნიკურად აუცილებელ მონაცემებს თქვენს ბრაუზერში —
+        ავტორიზაციის სესიას, რომ ყოველ გვერდზე ხელახლა არ მოგიწიოთ შესვლა.
+        რეკლამის ან თვალის მიდევნების cookie-ებს არ ვიყენებთ.
+      </p>
+
+      <h2>ცვლილებები</h2>
+      <p>
+        ამ პოლიტიკის განახლებისას შეიცვლება გვერდის თავში მითითებული თარიღი.
+      </p>
+
+      <h2>კონტაქტი</h2>
+      <p>
+        კონფიდენციალურობასთან დაკავშირებული ნებისმიერი შეკითხვისთვის დაგვიკავშირდით
+        WhatsApp-ზე:
+        <a href="https://wa.me/995557783549" target="_blank" rel="noopener noreferrer"
+          >+995 557 78 35 49</a
+        >.
+      </p>
+    </main>
+
+    <footer>© 2026 G&amp;M აქსესუარები</footer>
+  </body>
+</html>

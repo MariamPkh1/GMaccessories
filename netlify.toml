@@ -11,6 +11,11 @@
 # The app uses hash routing (#/catalog), so deep links already resolve to "/".
 # This catch-all is a safety net: it keeps direct URLs working if the router
 # is ever switched to history mode, and prevents stray 404s.
+#
+# Do NOT add `force = true` here. Netlify only applies a redirect when no real
+# file exists at that path, which is what lets /privacy.html be served as itself.
+# Forcing this rule would serve the SPA shell instead, and Facebook's app review
+# crawler would find no privacy policy at the URL we gave it.
 [[redirects]]
   from = "/*"
   to = "/index.html"

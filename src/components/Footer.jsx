@@ -20,6 +20,15 @@ export default function Footer() {
           <p className="text-xs text-on-surface-variant">
             © {new Date().getFullYear()} G&M აქსესუარები. ყველა უფლება დაცულია.
           </p>
+          {/* Plain href, not a hash route: privacy.html is a real static file so
+              that crawlers (Facebook's app review in particular) receive the
+              actual policy text rather than the empty SPA shell. */}
+          <a
+            href="/privacy.html"
+            className="text-xs text-on-surface-variant hover:text-primary transition-colors underline underline-offset-2"
+          >
+            კონფიდენციალურობის პოლიტიკა
+          </a>
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">

@@ -19,6 +19,20 @@ export const fmt = (n) => `${Number(n).toFixed(2)} ₾`
 export const catalogHref = (category) =>
   category ? `#/catalog/${encodeURIComponent(category)}` : '#/catalog'
 
+/**
+ * Pick the right image variant for a product.
+ *
+ * Small surfaces (cards, search results, thumbnail strips, admin table) pass
+ * `thumb: true` to get the ~400px version instead of the 1200px one.
+ * Products uploaded before thumbnails existed have an empty thumb_urls, so
+ * this falls back to the full image rather than requesting a missing file.
+ */
+export function productImage(product, { thumb = false, index = 0 } = {}) {
+  const full = product?.image_urls?.[index]
+  const small = product?.thumb_urls?.[index]
+  return (thumb && small) || full || ''
+}
+
 // --- Sizes & per-size pricing -----------------------------------------------
 //
 // `products.sizes` holds a list of { size, price } objects so each size can be

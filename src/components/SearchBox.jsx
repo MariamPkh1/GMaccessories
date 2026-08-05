@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store'
-import { displayPrice } from '../products'
+import { displayPrice, productImage } from '../products'
 
 // Live product search. Included in every nav so search works everywhere.
 export default function SearchBox() {
@@ -47,7 +47,7 @@ export default function SearchBox() {
                 className="w-full flex items-center gap-3 p-3 hover:bg-surface-container-low transition-colors text-left"
               >
                 <img
-                  src={p.image_urls?.[0]}
+                  src={productImage(p, { thumb: true })}
                   alt=""
                   loading="lazy"
                   className="w-10 h-10 object-cover bg-surface-container flex-shrink-0"

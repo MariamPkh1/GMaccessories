@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import AdminLayout from './AdminLayout'
 import { useStore } from '../../store'
-import { fmt } from '../../products'
+import { fmt, productImage } from '../../products'
 import { deleteProductImages } from '../../lib/productImages'
 
 function DeleteConfirm({ product, deleting, onCancel, onConfirm }) {
@@ -101,7 +101,7 @@ export default function ProductManage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 border border-outline-variant rounded overflow-hidden shrink-0 bg-surface-container-low">
                           {p.image_urls?.[0] && (
-                            <img src={p.image_urls[0]} alt="" className="w-full h-full object-cover" />
+                            <img src={productImage(p, { thumb: true })} alt="" className="w-full h-full object-cover" />
                           )}
                         </div>
                         <p className="text-sm font-medium text-on-surface">{p.title_ka}</p>
@@ -157,7 +157,10 @@ export default function ProductManage() {
             try {
               // Remove storage files first — orphaned files silently consume
               // the storage quota if the row is deleted without cleaning them up.
-              await deleteProductImages(pendingDelete.image_urls)
+              await deleteProductImages([
+                ...(pendingDelete.image_urls || []),
+                ...(pendingDelete.thumb_urls || []),
+              ])
               await deleteProduct(pendingDelete.id)
               setPendingDelete(null)
             } catch {

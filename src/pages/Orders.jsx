@@ -1,6 +1,6 @@
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
-import { fmt } from '../products'
+import { fmt, productImage } from '../products'
 
 const STATUS_LABELS = {
   pending: 'მოლოდინში',
@@ -35,7 +35,7 @@ function OrderCard({ order }) {
             <div className="flex items-center gap-3 min-w-0">
               {item.products?.image_urls?.[0] && (
                 <img
-                  src={item.products.image_urls[0]}
+                  src={productImage(item.products, { thumb: true })}
                   alt=""
                   className="w-12 h-12 object-cover rounded border border-outline-variant bg-surface-container-low flex-shrink-0"
                 />

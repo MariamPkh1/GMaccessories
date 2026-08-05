@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
-import { fmt, sizeEntries, priceForSize, hasVariablePricing, displayPrice } from '../products'
+import { fmt, sizeEntries, priceForSize, hasVariablePricing, displayPrice, productImage } from '../products'
 import Footer from '../components/Footer'
 
 // Videos open on the platform they're hosted on rather than being embedded:
@@ -25,25 +25,36 @@ function VideoLink({ url }) {
 
 function Gallery({ product }) {
   const images = product.image_urls?.length ? product.image_urls : ['']
-  const [mainSrc, setMainSrc] = useState(images[0])
+  const [index, setIndex] = useState(0)
 
+  // Track the selected image by index so the 80x80 strip can show the small
+  // variant while the main frame loads the full-size one.
   return (
     <div className="space-y-4">
       <div className="aspect-square border border-outline-variant rounded overflow-hidden bg-surface-container-low">
-        <img className="w-full h-full object-cover" src={mainSrc} alt={product.title_ka} />
+        <img
+          className="w-full h-full object-cover"
+          src={productImage(product, { index })}
+          alt={product.title_ka}
+        />
       </div>
 
       {images.length > 1 && (
         <div className="flex gap-3 overflow-x-auto">
-          {images.map((img, i) => (
+          {images.map((_, i) => (
             <button
               key={i}
-              onClick={() => setMainSrc(img)}
+              onClick={() => setIndex(i)}
               className={`w-20 h-20 border rounded overflow-hidden bg-surface-container-low shrink-0 transition-colors ${
-                mainSrc === img ? "border-primary" : "border-outline-variant"
+                index === i ? "border-primary" : "border-outline-variant"
               }`}
             >
-              <img className="w-full h-full object-cover" src={img} alt="" loading="lazy" />
+              <img
+                className="w-full h-full object-cover"
+                src={productImage(product, { index: i, thumb: true })}
+                alt=""
+                loading="lazy"
+              />
             </button>
           ))}
         </div>
@@ -179,7 +190,7 @@ function RelatedCard({ item }) {
       <div className="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
         <img
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          src={item.image_urls?.[0]}
+          src={productImage(item, { thumb: true })}
           alt={item.title_ka}
           loading="lazy"
         />

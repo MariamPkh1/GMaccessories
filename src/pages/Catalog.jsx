@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store'
-import { CATEGORIES, displayPrice, minPrice, maxPrice } from '../products'
+import { CATEGORIES, displayPrice, minPrice, maxPrice, productImage } from '../products'
 import SiteNav from '../components/SiteNav'
 import Footer from '../components/Footer'
 
@@ -218,7 +218,7 @@ function ProductCard({ product }) {
       >
         <img
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          src={product.image_urls?.[0]}
+          src={productImage(product, { thumb: true })}
           alt={product.title_ka}
           loading="lazy"
         />

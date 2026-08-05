@@ -1,6 +1,6 @@
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
-import { displayPrice } from '../products'
+import { displayPrice, productImage } from '../products'
 import Footer from '../components/Footer'
 
 function FavoriteCard({ item, onAddToCart, onRemove }) {
@@ -10,7 +10,7 @@ function FavoriteCard({ item, onAddToCart, onRemove }) {
         <div className="relative aspect-[4/3] overflow-hidden bg-surface-container-low">
           <img
             className="w-full h-full object-cover"
-            src={item.image_urls?.[0]}
+            src={productImage(item, { thumb: true })}
             alt={item.title_ka}
             loading="lazy"
           />

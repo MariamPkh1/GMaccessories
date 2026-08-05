@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
-import { fmt } from '../products'
+import { fmt, productImage } from '../products'
 import Footer from '../components/Footer'
 
 const DELIVERY = 10
@@ -14,7 +14,7 @@ function CartItem({ item, onQty, onRemove }) {
       <div className="w-24 h-24 shrink-0 border border-outline-variant rounded overflow-hidden bg-surface-container-low">
         <img
           className="w-full h-full object-cover"
-          src={product.image_urls?.[0]}
+          src={productImage(product, { thumb: true })}
           alt={product.title_ka}
           loading="lazy"
         />

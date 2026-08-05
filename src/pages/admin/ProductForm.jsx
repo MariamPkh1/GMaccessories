@@ -2,7 +2,11 @@ import { useRef, useState } from 'react'
 import AdminLayout from './AdminLayout'
 import { useStore } from '../../store'
 import { CATEGORIES, sizeEntries } from '../../products'
-import { compressAndUploadImage, deleteProductImages } from '../../lib/productImages'
+import {
+  compressAndUploadImage,
+  deleteProductImages,
+  MIN_RECOMMENDED_PX,
+} from '../../lib/productImages'
 
 const MAX_IMAGES = 5
 
@@ -13,6 +17,7 @@ const emptyForm = {
   price: '',
   category: CATEGORIES[0],
   image_urls: [],
+  thumb_urls: [],
   video_url: '',
   sizes: [],
   specifications: [],
@@ -38,10 +43,15 @@ export default function ProductForm({ mode, id }) {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  // Names of just-uploaded files whose original resolution was too low to look
+  // sharp. Not an error — the upload succeeded — just advice to re-shoot.
+  const [lowResNames, setLowResNames] = useState([])
   // Snapshot of the product's saved images, used to diff on submit so we only
   // delete files from storage that were actually removed and saved — never
-  // images the admin is still mid-edit on.
+  // images the admin is still mid-edit on. Thumbnails are tracked alongside so
+  // a removed image takes its small variant with it.
   const originalImageUrlsRef = useRef(existing?.image_urls || [])
+  const originalThumbUrlsRef = useRef(existing?.thumb_urls || [])
 
   if (mode === 'edit' && !existing) {
     return (
@@ -59,14 +69,29 @@ export default function ProductForm({ mode, id }) {
     const room = MAX_IMAGES - form.image_urls.length
     const toUpload = files.slice(0, room)
     setError('')
+    setLowResNames([])
     setUploading(true)
     try {
+      // Each upload yields a full-size and a thumbnail URL; the two arrays are
+      // kept index-aligned so thumb_urls[i] always belongs to image_urls[i].
       const urls = []
+      const thumbs = []
+      const lowRes = []
       for (const file of toUpload) {
         // eslint-disable-next-line no-await-in-loop
-        urls.push(await compressAndUploadImage(file))
+        const { url, thumbUrl, sourcePx } = await compressAndUploadImage(file)
+        urls.push(url)
+        thumbs.push(thumbUrl)
+        // We never upscale, so a small original can't be rescued later. Flag it
+        // now rather than letting a blurry photo go live unnoticed.
+        if (sourcePx < MIN_RECOMMENDED_PX) lowRes.push(`${file.name} (${sourcePx}px)`)
       }
-      setField('image_urls', [...form.image_urls, ...urls])
+      setForm((f) => ({
+        ...f,
+        image_urls: [...f.image_urls, ...urls],
+        thumb_urls: [...(f.thumb_urls || []), ...thumbs],
+      }))
+      setLowResNames(lowRes)
     } catch {
       setError('სურათის ატვირთვა ვერ მოხერხდა. სცადეთ თავიდან.')
     } finally {
@@ -77,15 +102,17 @@ export default function ProductForm({ mode, id }) {
 
   const removeImage = (idx) => {
     const url = form.image_urls[idx]
-    setField(
-      'image_urls',
-      form.image_urls.filter((_, i) => i !== idx),
-    )
+    const thumb = form.thumb_urls?.[idx]
+    setForm((f) => ({
+      ...f,
+      image_urls: f.image_urls.filter((_, i) => i !== idx),
+      thumb_urls: (f.thumb_urls || []).filter((_, i) => i !== idx),
+    }))
     // If this file was uploaded fresh in this editing session (not part of
     // the product's last-saved state), delete it immediately so it doesn't
     // sit orphaned in storage if the admin never saves.
     if (url && !originalImageUrlsRef.current.includes(url)) {
-      deleteProductImages([url]).catch(() => {})
+      deleteProductImages([url, thumb]).catch(() => {})
     }
   }
 
@@ -159,7 +186,10 @@ export default function ProductForm({ mode, id }) {
     try {
       if (mode === 'edit') {
         await updateProduct(id, payload)
-        const removed = originalImageUrlsRef.current.filter((u) => !payload.image_urls.includes(u))
+        const removed = [
+          ...originalImageUrlsRef.current.filter((u) => !payload.image_urls.includes(u)),
+          ...originalThumbUrlsRef.current.filter((u) => !(payload.thumb_urls || []).includes(u)),
+        ]
         if (removed.length) await deleteProductImages(removed)
       } else {
         await addProduct(payload)
@@ -253,6 +283,22 @@ export default function ProductForm({ mode, id }) {
             </div>
           )}
           {uploading && <p className="text-sm text-secondary mb-2">იტვირთება...</p>}
+          {lowResNames.length > 0 && (
+            <div className="mb-3 border border-outline-variant rounded p-3 bg-surface-container-low">
+              <p className="text-xs font-semibold text-on-surface mb-1">
+                სურათი დაბალი ხარისხისაა
+              </p>
+              <p className="text-xs text-secondary">
+                ეს ფაილები {MIN_RECOMMENDED_PX}px-ზე ნაკლებია, ამიტომ პროდუქტის გვერდზე
+                ბუნდოვნად გამოჩნდება. სასურველია ატვირთოთ უფრო დიდი ორიგინალი:
+              </p>
+              <ul className="text-xs text-secondary mt-1 list-disc list-inside">
+                {lowResNames.map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           {form.image_urls.length < MAX_IMAGES && (
             <label className="border border-dashed border-outline-variant rounded p-6 text-center transition-colors hover:border-primary cursor-pointer flex flex-col items-center gap-2 block">
               <span className="material-symbols-outlined text-secondary text-2xl">upload</span>

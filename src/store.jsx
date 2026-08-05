@@ -78,7 +78,7 @@ export function StoreProvider({ children }) {
     setOrdersLoading(true)
     const { data, error } = await supabase
       .from('orders')
-      .select('*, order_items(*, products(title_ka, image_urls))')
+      .select('*, order_items(*, products(title_ka, image_urls, thumb_urls))')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
     if (!active) return

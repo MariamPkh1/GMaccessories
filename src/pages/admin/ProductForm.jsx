@@ -21,6 +21,10 @@ const emptyForm = {
   video_url: '',
   sizes: [],
   specifications: [],
+  // in_stock is still sent as true so the column stays meaningful, but there is
+  // no longer any UI for it: nothing is held in inventory, every order is a
+  // sourcing request. The column is left in the database rather than dropped, so
+  // this is reversible.
   in_stock: true,
 }
 
@@ -469,22 +473,6 @@ export default function ProductForm({ mode, id }) {
               <span className="material-symbols-outlined text-[18px]">add</span>
             </button>
           </div>
-        </div>
-
-        {/* In stock toggle */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setField('in_stock', !form.in_stock)}
-            className={`relative w-10 h-5 rounded-full transition-colors ${form.in_stock ? 'bg-primary' : 'bg-surface-container-highest'}`}
-          >
-            <span
-              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
-                form.in_stock ? 'left-5' : 'left-0.5'
-              }`}
-            />
-          </button>
-          <span className="text-sm font-medium text-on-surface">მარაგშია</span>
         </div>
 
         {error && <p className="text-error text-sm">{error}</p>}

@@ -1,3 +1,5 @@
+import { useT } from '../i18n'
+
 // Single shared footer. Previously each page carried its own copy, which meant
 // the social links had to be kept in sync by hand in five places.
 // URLs are the canonical profile links with share/tracking params
@@ -12,13 +14,14 @@ const SOCIALS = [
 const PHONE = '557 78 35 49'
 
 export default function Footer() {
+  const t = useT()
   return (
     <footer className="bg-white border-t border-outline-variant mt-auto">
       <div className="w-full px-container-padding py-8 flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex flex-col items-center md:items-start gap-1">
-          <span className="font-headline-lg text-base text-on-surface">G&M აქსესუარები</span>
+          <span className="font-headline-lg text-base text-on-surface">{t('brand.name')}</span>
           <p className="text-xs text-on-surface-variant">
-            © {new Date().getFullYear()} G&M აქსესუარები. ყველა უფლება დაცულია.
+            © {new Date().getFullYear()} {t('brand.name')}. {t('footer.rights')}
           </p>
           {/* Plain href, not a hash route: privacy.html is a real static file so
               that crawlers (Facebook's app review in particular) receive the
@@ -27,7 +30,7 @@ export default function Footer() {
             href="/privacy.html"
             className="text-xs text-on-surface-variant hover:text-primary transition-colors underline underline-offset-2"
           >
-            კონფიდენციალურობის პოლიტიკა
+            {t('footer.privacy')}
           </a>
         </div>
 

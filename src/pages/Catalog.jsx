@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store'
 import { CATEGORIES, displayPrice, minPrice, maxPrice, productImage } from '../products'
+import { useLocale, useT } from '../i18n'
 import SiteNav from '../components/SiteNav'
 import Footer from '../components/Footer'
 
-const ALL = "ყველა"
+// Opaque sentinel, never shown to the user: the label is translated at render
+// time. It must not be a display string, because ALL is also compared against
+// the category taken from the URL.
+const ALL = '__all__'
 const TABS = [ALL, ...CATEGORIES]
 const PAGE_SIZE = 6
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "უახლესი" },
-  { value: "price-asc", label: "ფასი: დაბლიდან მაღლა" },
-  { value: "price-desc", label: "ფასი: მაღლიდან დაბლა" },
+  { value: 'newest', labelKey: 'catalog.sort.newest' },
+  { value: 'price-asc', labelKey: 'catalog.sort.priceAsc' },
+  { value: 'price-desc', labelKey: 'catalog.sort.priceDesc' },
 ]
 
 function SortDropdown({ sortBy, onChange }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   return (
     <div className="relative">
@@ -23,7 +28,7 @@ function SortDropdown({ sortBy, onChange }) {
         className="flex items-center gap-1.5 text-xs font-medium text-secondary border border-outline-variant px-3 py-1.5 rounded transition-colors hover:border-on-surface"
       >
         <span className="material-symbols-outlined text-[16px]">swap_vert</span>
-        სორტირება
+        {t('catalog.sort')}
       </button>
       {/* Panel is anchored left on mobile: these controls sit at the left edge
           there, so a right-anchored panel hangs off-screen and gets clipped.
@@ -44,7 +49,7 @@ function SortDropdown({ sortBy, onChange }) {
                 opt.value === sortBy ? "text-primary font-semibold" : "text-on-surface"
               }`}
             >
-              {opt.label}
+              {t(opt.labelKey)}
               {opt.value === sortBy && (
                 <span className="material-symbols-outlined text-[18px]">check</span>
               )}
@@ -57,6 +62,7 @@ function SortDropdown({ sortBy, onChange }) {
 }
 
 function FilterDropdown({ priceRange, onApply }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [min, setMin] = useState(priceRange.min)
   const [max, setMax] = useState(priceRange.max)
@@ -87,7 +93,7 @@ function FilterDropdown({ priceRange, onApply }) {
         }`}
       >
         <span className="material-symbols-outlined text-[16px]">tune</span>
-        ფილტრი
+        {t('catalog.filter')}
       </button>
       {open && (
         <div
@@ -95,7 +101,7 @@ function FilterDropdown({ priceRange, onApply }) {
           onMouseLeave={() => setOpen(false)}
         >
           <p className="text-xs font-medium text-secondary uppercase tracking-wider mb-4">
-            ფასი (₾)
+            {t('catalog.filter.price')}
           </p>
           <div className="flex items-center gap-2 mb-5">
             <input
@@ -103,7 +109,7 @@ function FilterDropdown({ priceRange, onApply }) {
               min="0"
               value={min}
               onChange={(e) => setMin(e.target.value)}
-              placeholder="დან"
+              placeholder={t('catalog.filter.min')}
               className="w-full min-w-0 border border-outline-variant rounded px-2.5 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
             />
             <span className="text-secondary shrink-0">—</span>
@@ -112,7 +118,7 @@ function FilterDropdown({ priceRange, onApply }) {
               min="0"
               value={max}
               onChange={(e) => setMax(e.target.value)}
-              placeholder="მდე"
+              placeholder={t('catalog.filter.max')}
               className="w-full min-w-0 border border-outline-variant rounded px-2.5 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
             />
           </div>
@@ -123,13 +129,13 @@ function FilterDropdown({ priceRange, onApply }) {
               onClick={apply}
               className="flex-grow bg-primary text-on-primary py-2 rounded text-sm font-semibold transition-opacity hover:opacity-90"
             >
-              გამოყენება
+              {t('catalog.filter.apply')}
             </button>
             <button
               onClick={clear}
               className="px-4 py-2 border border-outline-variant rounded text-sm font-medium transition-colors hover:border-on-surface whitespace-nowrap"
             >
-              გასუფთავება
+              {t('catalog.filter.clear')}
             </button>
           </div>
         </div>
@@ -139,9 +145,12 @@ function FilterDropdown({ priceRange, onApply }) {
 }
 
 function CatalogHeader({ activeCat, onChange, sortBy, onSortChange, priceRange, onPriceApply }) {
+  const { t, tCategory } = useLocale()
+  // ALL is a sentinel rather than a real category, so it gets its own label.
+  const tabLabel = (cat) => (cat === ALL ? t('catalog.all') : tCategory(cat))
   return (
     <header className="mb-8">
-      <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">კატალოგი</h1>
+      <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">{t('catalog.title')}</h1>
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 pb-6 border-b border-outline-variant">
         {/* Mobile/tablet: a single select. With 9 categories the tab row
             overflowed the screen and scrolled sideways, hiding most of them. */}
@@ -149,12 +158,12 @@ function CatalogHeader({ activeCat, onChange, sortBy, onSortChange, priceRange, 
           <select
             value={activeCat}
             onChange={(e) => onChange(e.target.value)}
-            aria-label="კატეგორია"
+            aria-label={t('catalog.category')}
             className="w-full appearance-none border border-outline-variant rounded pl-4 pr-10 py-2.5 text-sm font-medium text-on-surface bg-white focus:outline-none focus:border-primary transition-colors"
           >
             {TABS.map((cat) => (
               <option key={cat} value={cat}>
-                {cat}
+                {tabLabel(cat)}
               </option>
             ))}
           </select>
@@ -173,7 +182,7 @@ function CatalogHeader({ activeCat, onChange, sortBy, onSortChange, priceRange, 
                 activeCat === cat ? "text-primary" : "text-secondary hover:text-on-surface"
               }`}
             >
-              {cat}
+              {tabLabel(cat)}
               {activeCat === cat && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
@@ -191,6 +200,7 @@ function CatalogHeader({ activeCat, onChange, sortBy, onSortChange, priceRange, 
 
 function ProductCard({ product }) {
   const { addToCart, toggleFavorite, isFavorite } = useStore()
+  const { t, tCategory } = useLocale()
   const [added, setAdded] = useState(false)
   const favorited = isFavorite(product.id)
 
@@ -245,26 +255,35 @@ function ProductCard({ product }) {
             className="bg-primary text-on-primary text-xs font-semibold px-4 py-2 rounded flex items-center gap-1.5 pointer-events-auto"
           >
             <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
-            {added ? "დამატებულია" : "კალათაში დამატება"}
+            {added ? t('product.added') : t('product.addToCart')}
           </button>
         </div>
       </div>
       <div className="p-4">
         <span className="text-[11px] font-medium uppercase tracking-wider text-secondary mb-1 block">
-          {product.category}
+          {tCategory(product.category)}
         </span>
-        <h3 className="text-sm font-semibold text-on-surface truncate mb-2">{product.title_ka}</h3>
-        <p className="text-base font-bold text-on-surface">{displayPrice(product).text}</p>
+        <h3 className="text-sm font-semibold text-on-surface truncate mb-1">{product.title_ka}</h3>
+        {/* The admin form collects a short description but nothing displayed it,
+            so the field looked broken. Clamped to two lines and rendered only
+            when present, so cards without one keep their original height. */}
+        {product.short_description_ka && (
+          <p className="text-xs text-secondary leading-snug mb-2 line-clamp-2">
+            {product.short_description_ka}
+          </p>
+        )}
+        <p className="text-base font-bold text-on-surface">{displayPrice(product, t).text}</p>
       </div>
     </article>
   )
 }
 
 function EmptyState() {
+  const t = useT()
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
       <span className="material-symbols-outlined text-outline text-5xl mb-4">search_off</span>
-      <p className="text-secondary">პროდუქტები ვერ მოიძებნა</p>
+      <p className="text-secondary">{t('catalog.empty')}</p>
     </div>
   )
 }
@@ -287,6 +306,9 @@ function CatalogSkeleton() {
 }
 
 function Pagination({ page, totalPages, onChange }) {
+  // Declared before the early return: hooks must run in the same order on every
+  // render, and this component bails out when there's only one page.
+  const t = useT()
   if (totalPages <= 1) return null
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
   return (
@@ -294,7 +316,7 @@ function Pagination({ page, totalPages, onChange }) {
       <button
         onClick={() => onChange(page - 1)}
         disabled={page === 1}
-        aria-label="წინა გვერდი"
+        aria-label={t('catalog.prevPage')}
         className="w-9 h-9 flex items-center justify-center rounded border border-outline-variant text-secondary hover:border-on-surface transition-colors disabled:opacity-30 disabled:pointer-events-none"
       >
         <span className="material-symbols-outlined text-[18px]">chevron_left</span>
@@ -315,7 +337,7 @@ function Pagination({ page, totalPages, onChange }) {
       <button
         onClick={() => onChange(page + 1)}
         disabled={page === totalPages}
-        aria-label="შემდეგი გვერდი"
+        aria-label={t('catalog.nextPage')}
         className="w-9 h-9 flex items-center justify-center rounded border border-outline-variant text-secondary hover:border-on-surface transition-colors disabled:opacity-30 disabled:pointer-events-none"
       >
         <span className="material-symbols-outlined text-[18px]">chevron_right</span>
@@ -340,9 +362,9 @@ export default function Catalog({ initialCategory = null }) {
   const [page, setPage] = useState(1)
 
   const visible = useMemo(() => {
-    let list = products.filter(
-      (p) => p.in_stock !== false && (activeCat === ALL || p.category === activeCat),
-    )
+    // No stock filtering: every order is a sourcing *request* rather than a sale
+    // from held inventory, so "out of stock" never applied to this shop.
+    let list = products.filter((p) => activeCat === ALL || p.category === activeCat)
     // With per-size pricing a product spans a range, so it matches the filter
     // when ANY of its size options falls inside the requested bounds.
     if (priceRange.min !== "") list = list.filter((p) => maxPrice(p) >= Number(priceRange.min))
@@ -374,7 +396,7 @@ export default function Catalog({ initialCategory = null }) {
 
   return (
     <>
-      <SiteNav active="კატალოგი" />
+      <SiteNav active="catalog" />
       <main className="min-h-screen px-container-padding py-12 md:py-16 w-full">
         <CatalogHeader
           activeCat={activeCat}

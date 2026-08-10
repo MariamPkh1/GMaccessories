@@ -5,6 +5,7 @@ import MobileMenu from '../components/MobileMenu'
 import ABOUT_IMG from '../assets/newlogo.jpg'
 import { useAuth } from '../context/AuthContext'
 import { useStore } from '../store'
+import { useT } from '../i18n'
 import Footer from '../components/Footer'
 
 // Hero is served from /public. The about image is imported from src/assets so
@@ -13,38 +14,30 @@ const HERO_IMG = "/images/hero-automotive.webp"
 
 // Favorites/cart/orders are auth-gated, so they only show up once the user
 // is signed in — no point advertising links that just bounce back to login.
+//
+// Shape matches SiteNav's: a stable `id` plus a translation key. MobileMenu is
+// shared between the two navs and keys off `id`, so both must agree.
 const PUBLIC_LINKS = [
-  { label: "მთავარი", href: "#/" },
-  { label: "კატალოგი", href: "#/catalog" },
+  { id: 'home', labelKey: 'nav.home', href: '#/' },
+  { id: 'catalog', labelKey: 'nav.catalog', href: '#/catalog' },
 ]
 const AUTH_LINKS = [
-  { label: "ფავორიტები", href: "#/favorites" },
-  { label: "კალათა", href: "#/cart" },
-  { label: "ჩემი შეკვეთები", href: "#/orders" },
+  { id: 'favorites', labelKey: 'nav.favorites', href: '#/favorites' },
+  { id: 'cart', labelKey: 'nav.cart', href: '#/cart' },
+  { id: 'orders', labelKey: 'nav.orders', href: '#/orders' },
 ]
 
 const FAQ = [
-  {
-    q: "როგორ ხდება შეკვეთა?",
-    a: "შეკვეთის გაფორმება შეგიძლიათ როგორც საიტის, ასევე ჩვენი სოციალური ქსელების ან ტელეფონის საშუალებით. ჩვენი გუნდი დაგეხმარებათ სასურველი ნივთის შერჩევაში.",
-  },
-  {
-    q: "რამდენ ხანში ჩამოვა ნივთი?",
-    a: "ადგილობრივი მარაგების შემთხვევაში მიწოდება ხდება 24 საათში. საზღვარგარეთიდან შეკვეთისას ტრანსპორტირების დრო ინდივიდუალურია და შეადგენს საშუალოდ 7-14 სამუშაო დღეს.",
-  },
-  {
-    q: "როგორ დავუკავშირდე მაღაზიას?",
-    a: "ჩვენთან დაკავშირება შეგიძლიათ ნომერზე: 557 78 35 49, ან სოციალური ქსელების (FB, IG) მეშვეობით.",
-  },
-  {
-    q: "შემიძლია თუ არა პროდუქტის დათვალიერება ონლაინ ჩატით?",
-    a: "დიახ, ჩვენ გთავაზობთ ვიდეო კონსულტაციას, სადაც დეტალურად გაჩვენებთ თქვენთვის სასურველი პროდუქტის ხარისხსა და მახასიათებლებს.",
-  },
+  { qKey: 'home.faq.q1', aKey: 'home.faq.a1' },
+  { qKey: 'home.faq.q2', aKey: 'home.faq.a2' },
+  { qKey: 'home.faq.q3', aKey: 'home.faq.a3' },
+  { qKey: 'home.faq.q4', aKey: 'home.faq.a4' },
 ]
 
 function Navbar() {
   const { user } = useAuth()
   const { cartCount, favoriteItems } = useStore()
+  const t = useT()
   const [mobileOpen, setMobileOpen] = useState(false)
   const navLinks = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
   const favCount = favoriteItems.length
@@ -52,24 +45,30 @@ function Navbar() {
     <header className="fixed top-0 left-0 w-full z-[60] bg-white/95 backdrop-blur-md border-b border-outline-variant transition-all duration-300">
     <nav className="px-container-padding h-16 flex justify-between items-center">
       <div className="flex items-center">
-        <a href="#/" className="font-headline-lg text-on-surface tracking-tight text-[24px]">
-          G&M აქსესუარები
+        {/* whitespace-nowrap + a smaller mobile size: at 24px the name wrapped
+            to two lines on a 375px screen, making it 72px tall inside a 64px
+            header, so it visibly spilled out of the navbar. */}
+        <a
+          href="#/"
+          className="font-headline-lg text-on-surface tracking-tight text-[17px] sm:text-[24px] whitespace-nowrap"
+        >
+          {t('brand.name')}
         </a>
       </div>
       <div className="hidden lg:flex items-center gap-8">
         {navLinks.map((link) => (
           <a
-            key={link.label}
+            key={link.id}
             className={`nav-link text-sm font-medium transition-colors ${
-              link.label === "მთავარი" ? "active text-primary" : "text-on-surface hover:text-primary"
+              link.id === 'home' ? 'active text-primary' : 'text-on-surface hover:text-primary'
             }`}
             href={link.href}
           >
-            {link.label}
+            {t(link.labelKey)}
           </a>
         ))}
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 md:gap-2">
         <SearchBox />
         <AccountMenu />
         {user && (
@@ -77,7 +76,7 @@ function Navbar() {
             <a
               href="#/favorites"
               className="relative p-2 text-on-surface hover:text-primary transition-colors"
-              aria-label="ფავორიტები"
+              aria-label={t('nav.favorites')}
             >
               <span className="material-symbols-outlined">favorite</span>
               {favCount > 0 && (
@@ -89,7 +88,7 @@ function Navbar() {
             <a
               href="#/cart"
               className="relative p-2 text-on-surface hover:text-primary transition-colors"
-              aria-label="კალათა"
+              aria-label={t('nav.cart')}
             >
               <span className="material-symbols-outlined">shopping_cart</span>
               {cartCount > 0 && (
@@ -105,7 +104,7 @@ function Navbar() {
         <button
           className="lg:hidden p-2 text-on-surface"
           onClick={() => setMobileOpen((o) => !o)}
-          aria-label="მენიუ"
+          aria-label={t('common.menu')}
           aria-expanded={mobileOpen}
         >
           <span className="material-symbols-outlined">
@@ -122,10 +121,11 @@ function Navbar() {
 }
 
 function Hero() {
+  const t = useT()
   return (
     <section className="relative w-full h-hero flex items-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img className="w-full h-full object-cover" src={HERO_IMG} alt="G&M აქსესუარები" />
+        <img className="w-full h-full object-cover" src={HERO_IMG} alt={t('brand.name')} />
         <div className="absolute inset-0 bg-black/50" />
       </div>
       {/* pt-16 offsets the fixed nav that overlays the top of the hero, so the
@@ -133,18 +133,20 @@ function Hero() {
           slightly low. */}
       <div className="relative z-10 w-full px-container-padding pt-16">
         <div className="max-w-2xl">
-          <h2 className="font-display-lg text-display-lg text-white mb-4 leading-none">
-            G&M აქსესუარები
+          {/* The display-lg token is a fixed 40px, which needed 341px of width —
+              exactly the container width on a 375px screen — so the name broke
+              across two lines. Scaled down below sm; unchanged from sm up. */}
+          <h2 className="font-display-lg text-[26px] font-extrabold tracking-[-0.02em] sm:text-display-lg text-white mb-4 leading-none">
+            {t('brand.name')}
           </h2>
           <p className="font-body-md text-body-md text-white/80 mb-8 leading-relaxed">
-            ხარისხიანი ავტოაქსესუარები, სანდო მომსახურებით. აღმოაჩინეთ პრემიუმ
-            კლასის დეტალები თქვენი ავტომობილისთვის.
+            {t('home.hero.subtitle')}
           </p>
           <a
             className="inline-block bg-primary text-on-primary font-button-text text-button-text px-8 py-3 rounded transition-opacity hover:opacity-90"
             href="#/catalog"
           >
-            კატალოგის ნახვა
+            {t('catalog.viewCatalog')}
           </a>
         </div>
       </div>
@@ -153,6 +155,7 @@ function Hero() {
 }
 
 function About() {
+  const t = useT()
   return (
     <section className="py-24 md:py-32 px-container-padding w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
       {/* The logo is square (2024x2024), so the frame is square too — then
@@ -166,29 +169,22 @@ function About() {
           <img
             className="w-full h-full object-cover"
             src={ABOUT_IMG}
-            alt="G&M აქსესუარები"
+            alt={t('brand.name')}
           />
         </div>
       </div>
       <div className="order-1 md:order-2">
         <span className="font-label-sm text-label-sm text-secondary block mb-3">
-          ჩვენს შესახებ
+          {t('home.about.eyebrow')}
         </span>
         <h3 className="font-headline-lg text-3xl md:text-4xl text-on-surface leading-tight mb-6">
-          ავტოინდუსტრიის დახვეწილობა და უმაღლესი ხარისხი
+          {t('home.about.title')}
         </h3>
         <div className="space-y-4 text-on-surface/70 max-w-md">
+          <p>{t('home.about.p1')}</p>
+          <p>{t('home.about.p2')}</p>
           <p>
-            ჩვენ გთავაზობთ მხოლოდ საუკეთესო ხარისხის ავტონაწილებსა და
-            აქსესუარებს, რომლებიც შერჩეულია განსაკუთრებული ყურადღებით.
-          </p>
-          <p>
-            ჩვენი სერვისი მოიცავს სწრაფ მოძიებასა და მიწოდებას ქუთაისსა და მთელი
-            საქართველოს მასშტაბით, რაც გიზოგავთ დროსა და ენერგიას.
-          </p>
-          <p>
-            სწრაფი და დეტალური პასუხისთვის კონკრეტული პროდუქტის შესახებ მომწერეთ
-            ვაცაპზე{' '}
+            {t('home.about.whatsapp')}{' '}
             <a
               href="https://wa.me/995557783549"
               target="_blank"
@@ -205,13 +201,14 @@ function About() {
 }
 
 function AccordionItem({ item, isOpen, onToggle }) {
+  const t = useT()
   return (
     <div className="border-b border-outline-variant">
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between py-5 text-left"
       >
-        <span className="text-base font-semibold text-on-surface pr-4">{item.q}</span>
+        <span className="text-base font-semibold text-on-surface pr-4">{t(item.qKey)}</span>
         <span
           className={`material-symbols-outlined text-on-surface-variant shrink-0 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -224,25 +221,26 @@ function AccordionItem({ item, isOpen, onToggle }) {
         className="overflow-hidden transition-all duration-200"
         style={{ maxHeight: isOpen ? "300px" : "0", opacity: isOpen ? 1 : 0 }}
       >
-        <p className="pb-5 text-sm text-on-surface/70 leading-relaxed">{item.a}</p>
+        <p className="pb-5 text-sm text-on-surface/70 leading-relaxed">{t(item.aKey)}</p>
       </div>
     </div>
   )
 }
 
 function Faq() {
+  const t = useT()
   const [openIndex, setOpenIndex] = useState(null)
   return (
     <section className="py-24 md:py-32 px-container-padding bg-surface-container-low w-full">
       <div className="max-w-3xl mx-auto">
         <span className="font-label-sm text-label-sm text-secondary block mb-3">FAQ</span>
         <h3 className="font-headline-lg text-3xl md:text-4xl text-on-surface mb-12">
-          ხშირად დასმული კითხვები
+          {t('home.faq.title')}
         </h3>
         <div className="border-t border-outline-variant">
           {FAQ.map((item, i) => (
             <AccordionItem
-              key={item.q}
+              key={item.qKey}
               item={item}
               isOpen={openIndex === i}
               onToggle={() => setOpenIndex(openIndex === i ? null : i)}

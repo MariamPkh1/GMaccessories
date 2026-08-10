@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useStore } from '../store'
+import { useT } from '../i18n'
 import { displayPrice, productImage } from '../products'
 
 // Live product search. Included in every nav so search works everywhere.
 export default function SearchBox() {
   const { products } = useStore()
+  const t = useT()
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
 
@@ -33,7 +35,7 @@ export default function SearchBox() {
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
         className="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-md w-64 focus:ring-1 focus:ring-primary focus:outline-none"
-        placeholder="ძიება..."
+        placeholder={t('search.placeholder')}
         type="text"
       />
       {open && (
@@ -61,13 +63,13 @@ export default function SearchBox() {
                   </p>
                 </div>
                 <span className="font-body-md text-body-md text-primary flex-shrink-0">
-                  {displayPrice(p).text}
+                  {displayPrice(p, t).text}
                 </span>
               </button>
             ))
           ) : (
             <p className="p-4 text-center font-label-sm text-label-sm text-secondary">
-              ვერ მოიძებნა
+              {t('search.noResults')}
             </p>
           )}
         </div>

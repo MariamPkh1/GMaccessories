@@ -1,9 +1,11 @@
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
 import { displayPrice, productImage } from '../products'
+import { useLocale, useT } from '../i18n'
 import Footer from '../components/Footer'
 
 function FavoriteCard({ item, onAddToCart, onRemove }) {
+  const { t, tCategory } = useLocale()
   return (
     <div className="product-card border border-outline-variant rounded bg-white overflow-hidden">
       <a href={`#/product/${item.id}`} className="block">
@@ -21,7 +23,7 @@ function FavoriteCard({ item, onAddToCart, onRemove }) {
               onRemove(item.id)
             }}
             className="absolute top-3 right-3 p-1.5 bg-white/90 backdrop-blur-sm rounded transition-colors hover:bg-white"
-            aria-label="წაშლა ფავორიტებიდან"
+            aria-label={t('favorites.remove')}
           >
             <span className="material-symbols-outlined text-[18px] text-error" style={{ fontVariationSettings: "'FILL' 1" }}>
               favorite
@@ -30,10 +32,10 @@ function FavoriteCard({ item, onAddToCart, onRemove }) {
         </div>
         <div className="p-4">
           <span className="text-[11px] font-medium uppercase tracking-wider text-secondary mb-1 block">
-            {item.category}
+            {tCategory(item.category)}
           </span>
           <h3 className="text-sm font-semibold text-on-surface truncate mb-2">{item.title_ka}</h3>
-          <p className="text-base font-bold text-on-surface">{displayPrice(item).text}</p>
+          <p className="text-base font-bold text-on-surface">{displayPrice(item, t).text}</p>
         </div>
       </a>
       <div className="px-4 pb-4">
@@ -41,7 +43,7 @@ function FavoriteCard({ item, onAddToCart, onRemove }) {
           onClick={() => onAddToCart(item.id)}
           className="w-full border border-outline-variant text-on-surface py-2 text-xs font-semibold rounded transition-colors hover:border-primary hover:text-primary"
         >
-          კალათაში დამატება
+          {t('product.addToCart')}
         </button>
       </div>
     </div>
@@ -49,15 +51,16 @@ function FavoriteCard({ item, onAddToCart, onRemove }) {
 }
 
 function EmptyFavorites() {
+  const t = useT()
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <span className="material-symbols-outlined text-outline text-5xl mb-4">favorite</span>
-      <p className="text-lg text-secondary mb-6">თქვენი ფავორიტების სია ცარიელია</p>
+      <p className="text-lg text-secondary mb-6">{t('favorites.empty')}</p>
       <a
         className="bg-primary text-on-primary px-6 py-2.5 text-sm font-semibold rounded transition-opacity hover:opacity-90"
         href="#/catalog"
       >
-        კატალოგზე გადასვლა
+        {t('catalog.goToCatalog')}
       </a>
     </div>
   )
@@ -65,14 +68,15 @@ function EmptyFavorites() {
 
 export default function Favorites() {
   const { favoriteItems, toggleFavorite, addToCart, productsLoading } = useStore()
+  const t = useT()
   return (
     <>
-      <SiteNav active="ფავორიტები" />
+      <SiteNav active="favorites" />
       <main className="px-container-padding py-12 md:py-16 w-full min-h-screen">
-        <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">ფავორიტები</h1>
+        <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">{t('favorites.title')}</h1>
 
         {productsLoading ? (
-          <p className="text-secondary text-center py-24">იტვირთება...</p>
+          <p className="text-secondary text-center py-24">{t('common.loading')}</p>
         ) : favoriteItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favoriteItems.map((item) => (

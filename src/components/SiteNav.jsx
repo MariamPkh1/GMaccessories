@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store'
 import { useAuth } from '../context/AuthContext'
+import { useT } from '../i18n'
 import SearchBox from './SearchBox'
 import AccountMenu from './AccountMenu'
 import MobileMenu from './MobileMenu'
@@ -9,19 +10,25 @@ import MobileMenu from './MobileMenu'
 // Favorites/cart/orders are auth-gated routes, so there's no point showing
 // them to a logged-out visitor — clicking them would just bounce back with a
 // login prompt. They appear once the user is signed in.
+//
+// Each link carries a stable `id` alongside its translation key. The active link
+// used to be found by comparing display text, which broke the moment the label
+// could be Georgian *or* English -- nothing would highlight in the other
+// language. Pages now pass an id instead.
 const PUBLIC_LINKS = [
-  { label: "მთავარი", href: "#/" },
-  { label: "კატალოგი", href: "#/catalog" },
+  { id: 'home', labelKey: 'nav.home', href: '#/' },
+  { id: 'catalog', labelKey: 'nav.catalog', href: '#/catalog' },
 ]
 const AUTH_LINKS = [
-  { label: "ფავორიტები", href: "#/favorites" },
-  { label: "კალათა", href: "#/cart" },
-  { label: "ჩემი შეკვეთები", href: "#/orders" },
+  { id: 'favorites', labelKey: 'nav.favorites', href: '#/favorites' },
+  { id: 'cart', labelKey: 'nav.cart', href: '#/cart' },
+  { id: 'orders', labelKey: 'nav.orders', href: '#/orders' },
 ]
 
-export default function SiteNav({ active = "კატალოგი" }) {
+export default function SiteNav({ active = 'catalog' }) {
   const { cartCount, favoriteItems } = useStore()
   const { user } = useAuth()
+  const t = useT()
   const [mobileOpen, setMobileOpen] = useState(false)
   const navLinks = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
   const favCount = favoriteItems.length
@@ -29,20 +36,22 @@ export default function SiteNav({ active = "კატალოგი" }) {
     <header className="sticky top-0 w-full bg-white/95 backdrop-blur-md border-b border-outline-variant z-50">
       <nav className="w-full px-6 md:px-container-padding h-16 flex items-center justify-between gap-6">
         <a href="#/" className="flex flex-col flex-shrink-0">
-          <h1 className="font-headline-lg text-[24px] text-on-surface tracking-tight">
-            G&M აქსესუარები
+          {/* Matches Home's navbar: at 24px the name wrapped to two lines on a
+              375px screen and overflowed the 64px-tall header. */}
+          <h1 className="font-headline-lg text-[17px] sm:text-[24px] text-on-surface tracking-tight whitespace-nowrap">
+            {t('brand.name')}
           </h1>
         </a>
         <ul className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
-            <li key={link.label}>
+            <li key={link.id}>
               <a
                 className={`nav-link text-sm font-medium transition-colors ${
-                  link.label === active ? "active text-primary" : "text-on-surface hover:text-primary"
+                  link.id === active ? 'active text-primary' : 'text-on-surface hover:text-primary'
                 }`}
                 href={link.href}
               >
-                {link.label}
+                {t(link.labelKey)}
               </a>
             </li>
           ))}
@@ -55,7 +64,7 @@ export default function SiteNav({ active = "კატალოგი" }) {
               <a
                 href="#/favorites"
                 className="relative p-2 text-on-surface hover:text-primary transition-colors"
-                aria-label="ფავორიტები"
+                aria-label={t('nav.favorites')}
               >
                 <span className="material-symbols-outlined">favorite</span>
                 {favCount > 0 && (
@@ -67,7 +76,7 @@ export default function SiteNav({ active = "კატალოგი" }) {
               <a
                 href="#/cart"
                 className="relative p-2 text-on-surface hover:text-primary transition-colors"
-                aria-label="კალათა"
+                aria-label={t('nav.cart')}
               >
                 <span className="material-symbols-outlined">shopping_cart</span>
                 {cartCount > 0 && (
@@ -83,7 +92,7 @@ export default function SiteNav({ active = "კატალოგი" }) {
           <button
             className="lg:hidden p-2 text-on-surface"
             onClick={() => setMobileOpen((o) => !o)}
-            aria-label="მენიუ"
+            aria-label={t('common.menu')}
             aria-expanded={mobileOpen}
           >
             <span className="material-symbols-outlined">

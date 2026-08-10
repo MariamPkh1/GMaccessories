@@ -141,10 +141,16 @@ export function hasVariablePricing(product) {
 
 /**
  * What a product card / search result should display.
- * Returns e.g. { text: "დან 30.00 ₾", from: true }
+ * Returns e.g. { text: "30.00 ₾-დან", from: true }
+ *
+ * Takes the translate function rather than hardcoding a language, because the
+ * two locales disagree on word order: Georgian appends the postposition
+ * ("30.00 ₾-დან") while English prefixes it ("from 30.00 ₾"). The `price.from`
+ * template owns that difference, so neither language's grammar is baked in here.
  */
-export function displayPrice(product) {
+export function displayPrice(product, t) {
   const from = hasVariablePricing(product)
   const value = from ? minPrice(product) : Number(product?.price) || 0
-  return { text: from ? `დან ${fmt(value)}` : fmt(value), from, value }
+  const amount = fmt(value)
+  return { text: from ? t('price.from', { amount }) : amount, from, value }
 }

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useT } from '../i18n'
 
 // Shared account control used by both the landing navbar and SiteNav.
 export default function AccountMenu() {
   const { user, profile, loading, openLogin, signOut } = useAuth()
+  const t = useT()
   const [open, setOpen] = useState(false)
 
   if (loading) return <span className="material-symbols-outlined text-on-surface-variant">person</span>
@@ -15,7 +17,7 @@ export default function AccountMenu() {
         className="font-label-sm text-label-sm normal-case tracking-normal text-on-surface border border-outline-variant px-3 py-1.5 rounded transition-colors hover:border-primary hover:text-primary flex items-center gap-2"
       >
         <span className="material-symbols-outlined text-[18px]">person</span>
-        <span className="hidden sm:inline">შესვლა</span>
+        <span className="hidden sm:inline">{t('account.signIn')}</span>
       </button>
     )
   }
@@ -40,14 +42,14 @@ export default function AccountMenu() {
             href="#/orders"
             className="block px-4 py-3 font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low transition-colors"
           >
-            ჩემი შეკვეთები
+            {t('account.myOrders')}
           </a>
           {profile?.is_admin && (
             <a
               href="#/admin/products"
               className="block px-4 py-3 font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low transition-colors"
             >
-              ადმინის პანელი
+              {t('account.adminPanel')}
             </a>
           )}
           <button
@@ -57,7 +59,7 @@ export default function AccountMenu() {
             }}
             className="w-full text-left px-4 py-3 font-label-sm text-label-sm text-error hover:bg-surface-container-low transition-colors"
           >
-            გასვლა
+            {t('account.signOut')}
           </button>
         </div>
       )}

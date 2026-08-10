@@ -3,26 +3,22 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
 
-const AUTH_ERRORS = {
-  'Token has expired or is invalid': 'კოდი არასწორია ან ვადა გაუვიდა. სცადეთ თავიდან.',
-  'Signups not allowed for otp': 'რეგისტრაცია დროებით გამორთულია.',
+// Sign-in is Google/Facebook only. Email one-time codes were removed
+// deliberately: Supabase's built-in mailer allows only a couple of messages per
+// hour project-wide, so email login failed silently for real traffic, and
+// lifting that ceiling would have required paying for a domain to send from.
+// OAuth has no such limit and no outbound mail at all.
+//
+// Maps Supabase error codes to i18n keys rather than to finished sentences: this
+// context has no business knowing which language the user reads, so the caller
+// translates.
+const AUTH_ERROR_KEYS = {
+  over_request_rate_limit: 'auth.error.rateLimit',
+  provider_disabled: 'auth.error.providerDisabled',
 }
 
-const AUTH_ERROR_CODES = {
-  // Supabase's built-in (no custom SMTP) mailer allows only a handful of
-  // emails per hour, project-wide — easy to hit while testing. A custom SMTP
-  // provider removes this ceiling.
-  over_email_send_rate_limit:
-    'ბევრი მცდელობა მოხდა მოკლე დროში — ელ. ფოსტის გაგზავნის ლიმიტი ამოიწურა. სცადეთ რამდენიმე წუთში.',
-  over_request_rate_limit: 'ბევრი მცდელობა მოხდა მოკლე დროში. სცადეთ მოგვიანებით.',
-}
-
-function translateError(error) {
-  return (
-    AUTH_ERROR_CODES[error?.code] ||
-    AUTH_ERRORS[error?.message] ||
-    'დაფიქსირდა შეცდომა. სცადეთ მოგვიანებით.'
-  )
+function errorKey(error) {
+  return AUTH_ERROR_KEYS[error?.code] || 'auth.error.generic'
 }
 
 export function AuthProvider({ children }) {
@@ -30,7 +26,6 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isLoginOpen, setLoginOpen] = useState(false)
-  const [pendingEmail, setPendingEmail] = useState(null)
 
   const loadProfile = async (userId) => {
     if (!userId) {
@@ -67,51 +62,14 @@ export function AuthProvider({ children }) {
   }, [])
 
   const openLogin = () => setLoginOpen(true)
-  const closeLogin = () => {
-    setLoginOpen(false)
-    setPendingEmail(null)
-  }
-
-  const sendCode = async ({ email, fullName }) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { data: { full_name: fullName || null } },
-    })
-    if (error) return { ok: false, error: translateError(error) }
-    setPendingEmail(email)
-    return { ok: true }
-  }
-
-  const verifyCode = async ({ code }) => {
-    if (!pendingEmail) return { ok: false, error: 'ჯერ გამოგზავნეთ კოდი.' }
-
-    // Supabase issues a different token *type* depending on whether the
-    // account has been confirmed yet:
-    //   - brand new / unconfirmed account -> "signup" token
-    //   - existing confirmed account      -> "email" token
-    // The client has to name the type up front, and the wrong one fails with
-    // a generic "Token has expired or is invalid". Since the same 6-digit
-    // code is entered in both cases, try the common one first and fall back
-    // to the other rather than making the user guess why login broke.
-    let error = null
-    for (const type of ['email', 'signup']) {
-      const res = await supabase.auth.verifyOtp({ email: pendingEmail, token: code, type })
-      if (!res.error) {
-        setPendingEmail(null)
-        setLoginOpen(false)
-        return { ok: true }
-      }
-      error = res.error
-    }
-    return { ok: false, error: translateError(error) }
-  }
+  const closeLogin = () => setLoginOpen(false)
 
   const oauthSignIn = async (provider) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: window.location.origin },
     })
-    if (error) return { ok: false, error: translateError(error) }
+    if (error) return { ok: false, errorKey: errorKey(error) }
     return { ok: true }
   }
 
@@ -124,8 +82,6 @@ export function AuthProvider({ children }) {
     isLoginOpen,
     openLogin,
     closeLogin,
-    sendCode,
-    verifyCode,
     oauthSignIn,
     signOut,
   }

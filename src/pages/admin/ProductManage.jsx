@@ -87,9 +87,6 @@ export default function ProductManage() {
                     ფასი
                   </th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider">
-                    სტატუსი
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-secondary uppercase tracking-wider">
                     მოქმედება
                   </th>
                 </tr>
@@ -109,15 +106,6 @@ export default function ProductManage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-on-surface">{p.category}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-on-surface">{fmt(p.price)}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block text-xs font-medium px-2 py-0.5 rounded ${
-                          p.in_stock ? 'bg-green-50 text-green-700' : 'bg-error-container text-on-error-container'
-                        }`}
-                      >
-                        {p.in_stock ? 'მარაგში' : 'არ არის მარაგში'}
-                      </span>
-                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <a

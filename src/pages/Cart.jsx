@@ -2,13 +2,11 @@ import { useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
 import { fmt, productImage } from '../products'
-import { useT } from '../i18n'
 import Footer from '../components/Footer'
 
 const DELIVERY = 10
 
 function CartItem({ item, onQty, onRemove }) {
-  const t = useT()
   // unitPrice comes from the store already resolved for the chosen size.
   const { product, size, quantity, unitPrice } = item
   return (
@@ -25,7 +23,7 @@ function CartItem({ item, onQty, onRemove }) {
         <div className="flex items-start justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold text-on-surface truncate">{product.title_ka}</h3>
-            {size && <span className="text-xs text-secondary mt-0.5 block">{t('product.size')} {size}</span>}
+            {size && <span className="text-xs text-secondary mt-0.5 block">ზომა: {size}</span>}
           </div>
           <button
             onClick={() => onRemove(product.id, size)}
@@ -59,7 +57,6 @@ function CartItem({ item, onQty, onRemove }) {
 }
 
 function Summary({ subtotal, onSubmit, submitted, submitError }) {
-  const t = useT()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
@@ -68,7 +65,7 @@ function Summary({ subtotal, onSubmit, submitted, submitError }) {
 
   const handleClick = async () => {
     if (!name.trim() || !phone.trim()) {
-      setFieldError(t('cart.error.missingContact'))
+      setFieldError('შეავსეთ სახელი და ტელეფონის ნომერი.')
       return
     }
     setFieldError('')
@@ -79,35 +76,35 @@ function Summary({ subtotal, onSubmit, submitted, submitError }) {
 
   return (
     <aside className="border border-outline-variant rounded p-6 bg-white h-fit lg:sticky lg:top-24">
-      <h2 className="text-lg font-bold text-on-surface mb-6">{t('cart.summary')}</h2>
+      <h2 className="text-lg font-bold text-on-surface mb-6">შეჯამება</h2>
 
       <div className="space-y-3 mb-6">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-secondary">{t('cart.itemsTotal')}</span>
+          <span className="text-sm text-secondary">ნივთების ღირებულება:</span>
           <span className="text-sm font-medium">{fmt(subtotal)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-secondary">{t('cart.delivery')}</span>
+          <span className="text-sm text-secondary">მიწოდება:</span>
           <span className="text-sm font-medium">{fmt(DELIVERY)}</span>
         </div>
         <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
-          <span className="text-base font-semibold text-on-surface">{t('cart.estimatedTotal')}</span>
+          <span className="text-base font-semibold text-on-surface">სავარაუდო ჯამი:</span>
           <span className="text-xl font-bold text-on-surface">{fmt(subtotal + DELIVERY)}</span>
         </div>
       </div>
 
       <div className="space-y-4 mb-4">
         <div>
-          <label className="text-xs font-medium text-secondary mb-1.5 block">{t('cart.fullName')}</label>
+          <label className="text-xs font-medium text-secondary mb-1.5 block">სახელი და გვარი</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={t('cart.fullNamePlaceholder')}
+            placeholder="ჩაწერეთ სახელი..."
             className="w-full border border-outline-variant rounded px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-colors"
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-secondary mb-1.5 block">{t('cart.phone')}</label>
+          <label className="text-xs font-medium text-secondary mb-1.5 block">ტელეფონის ნომერი</label>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -119,7 +116,7 @@ function Summary({ subtotal, onSubmit, submitted, submitError }) {
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder={t('cart.notesPlaceholder')}
+          placeholder="შენიშვნა (არასავალდებულო)"
           rows={2}
           className="w-full border border-outline-variant rounded px-3 py-2.5 text-sm focus:outline-none focus:border-primary transition-colors resize-none"
         />
@@ -130,45 +127,47 @@ function Summary({ subtotal, onSubmit, submitted, submitError }) {
         disabled={submitted || submitting}
         className="w-full bg-primary text-on-primary py-3 text-sm font-semibold rounded transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {submitted ? t('cart.submitted') : submitting ? t('cart.submitting') : t('cart.submit')}
+        {submitted ? 'გაგზავნილია' : submitting ? 'იგზავნება...' : 'შეკვეთის გაფორმება'}
       </button>
       {fieldError && <p className="text-error text-xs text-center mt-3">{fieldError}</p>}
       {submitError && <p className="text-error text-xs text-center mt-3">{submitError}</p>}
       <p className="text-xs text-secondary mt-3 text-center leading-relaxed">
-        {t('cart.noOnlinePayment')}
+        ეს არის მოთხოვნა შესყიდვაზე — გადახდა არ ხდება ონლაინ. ჩვენი გუნდი
+        დაგიკავშირდებათ დეტალების დასაზუსტებლად.
       </p>
     </aside>
   )
 }
 
 function EmptyCart() {
-  const t = useT()
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center w-full">
       <span className="material-symbols-outlined text-outline text-5xl mb-4">shopping_bag</span>
-      <p className="text-lg text-secondary mb-6">{t('cart.empty')}</p>
+      <p className="text-lg text-secondary mb-6">თქვენი კალათა ცარიელია</p>
       <a
         href="#/catalog"
         className="bg-primary text-on-primary px-6 py-2.5 text-sm font-semibold rounded transition-opacity hover:opacity-90"
       >
-        {t('catalog.goToCatalog')}
+        კატალოგზე გადასვლა
       </a>
     </div>
   )
 }
 
 function OrderSubmitted() {
-  const t = useT()
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center w-full">
       <span className="material-symbols-outlined text-primary text-5xl mb-4">check_circle</span>
-      <h2 className="text-xl font-bold text-on-surface mb-2">{t('cart.success.title')}</h2>
-      <p className="text-secondary mb-6">{t('cart.success.body')}</p>
+      <h2 className="text-xl font-bold text-on-surface mb-2">შეკვეთის მოთხოვნა გაგზავნილია</h2>
+      <p className="text-secondary mb-6">
+        ჩვენი გუნდი მალე დაგიკავშირდებათ. სტატუსის ნახვა შეგიძლიათ „ჩემი
+        შეკვეთების“ გვერდზე.
+      </p>
       <a
         href="#/orders"
         className="bg-primary text-on-primary px-6 py-2.5 text-sm font-semibold rounded transition-opacity hover:opacity-90"
       >
-        {t('cart.success.viewOrders')}
+        ჩემი შეკვეთების ნახვა
       </a>
     </div>
   )
@@ -176,7 +175,6 @@ function OrderSubmitted() {
 
 export default function Cart() {
   const { cartItems, changeQty, removeFromCart, cartSubtotal, submitOrder } = useStore()
-  const t = useT()
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const count = cartItems.reduce((sum, it) => sum + it.quantity, 0)
@@ -187,7 +185,7 @@ export default function Cart() {
       await submitOrder(contactInfo)
       setSubmitted(true)
     } catch {
-      setSubmitError(t('cart.error.submitFailed'))
+      setSubmitError('შეკვეთის გაგზავნა ვერ მოხერხდა. სცადეთ თავიდან.')
     }
   }
 
@@ -196,9 +194,9 @@ export default function Cart() {
       <SiteNav active="cart" />
       <main className="px-container-padding py-12 md:py-16 w-full min-h-screen">
         <div className="flex items-end justify-between mb-8">
-          <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface">{t('cart.title')}</h1>
+          <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface">კალათა</h1>
           {!submitted && cartItems.length > 0 && (
-            <p className="text-sm text-secondary">{t('cart.itemCount', { count })}</p>
+            <p className="text-sm text-secondary">{count} ნივთი</p>
           )}
         </div>
 

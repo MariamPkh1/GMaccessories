@@ -9,16 +9,18 @@ const AuthContext = createContext(null)
 // lifting that ceiling would have required paying for a domain to send from.
 // OAuth has no such limit and no outbound mail at all.
 //
-// Maps Supabase error codes to i18n keys rather than to finished sentences: this
-// context has no business knowing which language the user reads, so the caller
-// translates.
-const AUTH_ERROR_KEYS = {
-  over_request_rate_limit: 'auth.error.rateLimit',
-  provider_disabled: 'auth.error.providerDisabled',
+// Supabase surfaces a machine code; these are the two worth explaining to a
+// customer. Anything else collapses to the generic message rather than leaking
+// an English SDK string into a Georgian UI.
+const AUTH_ERROR_MESSAGES = {
+  over_request_rate_limit: 'ბევრი მცდელობა მოხდა მოკლე დროში. სცადეთ მოგვიანებით.',
+  provider_disabled: 'ავტორიზაციის ეს მეთოდი დროებით მიუწვდომელია.',
 }
 
-function errorKey(error) {
-  return AUTH_ERROR_KEYS[error?.code] || 'auth.error.generic'
+const GENERIC_AUTH_ERROR = 'დაფიქსირდა შეცდომა. სცადეთ მოგვიანებით.'
+
+function errorMessage(error) {
+  return AUTH_ERROR_MESSAGES[error?.code] || GENERIC_AUTH_ERROR
 }
 
 export function AuthProvider({ children }) {
@@ -69,7 +71,7 @@ export function AuthProvider({ children }) {
       provider,
       options: { redirectTo: window.location.origin },
     })
-    if (error) return { ok: false, errorKey: errorKey(error) }
+    if (error) return { ok: false, error: errorMessage(error) }
     return { ok: true }
   }
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useT } from '../i18n'
 
 // Google/Facebook only. There are deliberately no separate "log in" and
 // "register" tabs: with OAuth both do exactly the same thing -- the provider
@@ -8,17 +7,14 @@ import { useT } from '../i18n'
 // -- so two tabs would have been two identical buttons.
 export default function AuthModal() {
   const { isLoginOpen, closeLogin, oauthSignIn } = useAuth()
-  const t = useT()
-  // Stored as an i18n key, not a sentence, so the message re-renders in the new
-  // language if the visitor switches locale while the error is on screen.
-  const [errorKey, setErrorKey] = useState('')
+  const [error, setError] = useState('')
   // Set once a provider is chosen. The browser is about to navigate away, so
   // this exists to stop a second click firing another redirect mid-flight.
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (isLoginOpen) {
-      setErrorKey('')
+      setError('')
       setBusy(false)
     }
   }, [isLoginOpen])
@@ -35,12 +31,12 @@ export default function AuthModal() {
   if (!isLoginOpen) return null
 
   const handleOAuth = async (provider) => {
-    setErrorKey('')
+    setError('')
     setBusy(true)
     const res = await oauthSignIn(provider)
     // On success the page redirects, so only a failure ever gets this far.
     if (!res.ok) {
-      setErrorKey(res.errorKey)
+      setError(res.error)
       setBusy(false)
     }
   }
@@ -61,7 +57,7 @@ export default function AuthModal() {
       >
         <button
           onClick={closeLogin}
-          aria-label={t('common.close')}
+          aria-label="დახურვა"
           className="absolute top-3 right-3 z-10 p-1.5 rounded text-error hover:bg-error-container transition-colors"
         >
           <span className="material-symbols-outlined text-[24px]">close</span>
@@ -69,9 +65,11 @@ export default function AuthModal() {
 
         <div className="text-center mb-6">
           <h2 id="auth-modal-title" className="font-headline-lg text-xl text-on-surface">
-            {t('auth.title')}
+            შესვლა ან რეგისტრაცია
           </h2>
-          <p className="text-sm text-secondary mt-2">{t('auth.subtitle')}</p>
+          <p className="text-sm text-secondary mt-2">
+            აირჩიეთ ერთი მეთოდი — პაროლის შექმნა არ დაგჭირდებათ
+          </p>
         </div>
 
         <div className="space-y-3">
@@ -82,7 +80,7 @@ export default function AuthModal() {
             className="w-full flex items-center justify-center gap-3 border border-outline-variant rounded py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[18px]">travel_explore</span>
-            {t('auth.continueGoogle')}
+            გაგრძელება Google-ით
           </button>
           <button
             type="button"
@@ -91,22 +89,22 @@ export default function AuthModal() {
             className="w-full flex items-center justify-center gap-3 border border-outline-variant rounded py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[18px]">public</span>
-            {t('auth.continueFacebook')}
+            გაგრძელება Facebook-ით
           </button>
         </div>
 
-        {busy && <p className="text-secondary text-xs text-center mt-4">{t('common.loading')}</p>}
-        {errorKey && <p className="text-error text-xs text-center mt-4">{t(errorKey)}</p>}
+        {busy && <p className="text-secondary text-xs text-center mt-4">იტვირთება...</p>}
+        {error && <p className="text-error text-xs text-center mt-4">{error}</p>}
 
         <p className="text-xs text-secondary text-center mt-6 leading-relaxed">
-          {t('auth.consent')}{' '}
+          გაგრძელებით ეთანხმებით{' '}
           <a
             href="/privacy.html"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline underline-offset-2"
           >
-            {t('auth.privacyPolicy')}
+            კონფიდენციალურობის პოლიტიკას
           </a>
         </p>
       </div>

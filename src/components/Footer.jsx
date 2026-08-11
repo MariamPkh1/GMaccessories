@@ -1,5 +1,3 @@
-import { useT } from '../i18n'
-
 // Single shared footer. Previously each page carried its own copy, which meant
 // the social links had to be kept in sync by hand in five places.
 // URLs are the canonical profile links with share/tracking params
@@ -13,24 +11,25 @@ const SOCIALS = [
 
 const PHONE = '557 78 35 49'
 
+const BRAND = 'G&M აქსესუარები'
+
 export default function Footer() {
-  const t = useT()
   return (
-    <footer className="bg-white border-t border-outline-variant mt-auto">
-      <div className="w-full px-container-padding py-8 flex flex-col md:flex-row justify-between items-center gap-6">
+    <footer className="bg-[#0f1a2a] mt-auto">
+      <div className="w-full px-container-padding py-10 flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex flex-col items-center md:items-start gap-1">
-          <span className="font-headline-lg text-base text-on-surface">{t('brand.name')}</span>
-          <p className="text-xs text-on-surface-variant">
-            © {new Date().getFullYear()} {t('brand.name')}. {t('footer.rights')}
+          <span className="font-headline-lg text-base text-white">{BRAND}</span>
+          <p className="text-xs text-white/55">
+            © {new Date().getFullYear()} {BRAND}. ყველა უფლება დაცულია.
           </p>
           {/* Plain href, not a hash route: privacy.html is a real static file so
               that crawlers (Facebook's app review in particular) receive the
               actual policy text rather than the empty SPA shell. */}
           <a
             href="/privacy.html"
-            className="text-xs text-on-surface-variant hover:text-primary transition-colors underline underline-offset-2"
+            className="text-xs text-white/55 hover:text-white transition-colors underline underline-offset-2"
           >
-            {t('footer.privacy')}
+            კონფიდენციალურობის პოლიტიკა
           </a>
         </div>
 
@@ -41,7 +40,7 @@ export default function Footer() {
               href={s.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
+              className="text-sm font-medium text-white/65 hover:text-white transition-colors"
             >
               {s.label}
             </a>
@@ -50,7 +49,7 @@ export default function Footer() {
 
         <a
           href={`tel:${PHONE.replace(/\s/g, '')}`}
-          className="text-sm font-medium text-on-surface hover:text-primary transition-colors"
+          className="text-sm font-medium text-white hover:text-white/85 transition-colors"
         >
           {PHONE}
         </a>

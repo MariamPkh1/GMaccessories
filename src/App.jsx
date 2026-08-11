@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { StoreProvider } from './store'
-import { LocaleProvider } from './i18n'
 import { AuthProvider } from './context/AuthContext'
 import AuthModal from './components/AuthModal'
 import OpenInBrowserBar from './components/OpenInBrowserBar'
@@ -116,16 +115,13 @@ function Router() {
 }
 
 export default function App() {
-  // LocaleProvider is outermost so every other provider and page can translate.
   return (
-    <LocaleProvider>
-      <AuthProvider>
-        <StoreProvider>
-          <Router />
-          <AuthModal />
-          <OpenInBrowserBar />
-        </StoreProvider>
-      </AuthProvider>
-    </LocaleProvider>
+    <AuthProvider>
+      <StoreProvider>
+        <Router />
+        <AuthModal />
+        <OpenInBrowserBar />
+      </StoreProvider>
+    </AuthProvider>
   )
 }

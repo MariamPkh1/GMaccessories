@@ -1,190 +1,213 @@
 import { useState } from 'react'
-import SearchBox from '../components/SearchBox'
 import AccountMenu from '../components/AccountMenu'
 import MobileMenu from '../components/MobileMenu'
+import CategoryStrip from '../components/CategoryStrip'
 import ABOUT_IMG from '../assets/newlogo.jpg'
 import { useAuth } from '../context/AuthContext'
 import { useStore } from '../store'
-import { useT } from '../i18n'
 import Footer from '../components/Footer'
 
 // Hero is served from /public. The about image is imported from src/assets so
 // Vite fingerprints it for cache-busting.
-const HERO_IMG = "/images/hero-automotive.webp"
+const HERO_IMG = '/images/hero-automotive.webp'
+
+const BRAND = 'G&M აქსესუარები'
 
 // Favorites/cart/orders are auth-gated, so they only show up once the user
 // is signed in — no point advertising links that just bounce back to login.
 //
-// Shape matches SiteNav's: a stable `id` plus a translation key. MobileMenu is
-// shared between the two navs and keys off `id`, so both must agree.
+// Shape matches SiteNav's: a stable `id` plus a label. MobileMenu is shared
+// between the two navs and keys off `id`, so both must agree.
 const PUBLIC_LINKS = [
-  { id: 'home', labelKey: 'nav.home', href: '#/' },
-  { id: 'catalog', labelKey: 'nav.catalog', href: '#/catalog' },
+  { id: 'home', label: 'მთავარი', href: '#/' },
+  { id: 'catalog', label: 'კატალოგი', href: '#/catalog' },
 ]
 const AUTH_LINKS = [
-  { id: 'favorites', labelKey: 'nav.favorites', href: '#/favorites' },
-  { id: 'cart', labelKey: 'nav.cart', href: '#/cart' },
-  { id: 'orders', labelKey: 'nav.orders', href: '#/orders' },
+  { id: 'favorites', label: 'ფავორიტები', href: '#/favorites' },
+  { id: 'cart', label: 'კალათა', href: '#/cart' },
+  { id: 'orders', label: 'ჩემი შეკვეთები', href: '#/orders' },
 ]
 
-const FAQ = [
-  { qKey: 'home.faq.q1', aKey: 'home.faq.a1' },
-  { qKey: 'home.faq.q2', aKey: 'home.faq.a2' },
-  { qKey: 'home.faq.q3', aKey: 'home.faq.a3' },
-  { qKey: 'home.faq.q4', aKey: 'home.faq.a4' },
+const HOW_STEPS = [
+  {
+    n: '01',
+    title: 'შეკვეთა',
+    body: 'აირჩიეთ პროდუქტი კატალოგიდან ან მოგვწერეთ WhatsApp-ზე / სოციალურ ქსელებში. დაგეხმარებით შერჩევაში.',
+  },
+  {
+    n: '02',
+    title: 'მოძიება',
+    body: 'ადგილობრივი მარაგი — ხშირად 24 საათში. საზღვარგარეთიდან — საშუალოდ 7–14 სამუშაო დღე.',
+  },
+  {
+    n: '03',
+    title: 'მიწოდება',
+    body: 'ქუთაისი და მთელი საქართველო. დეტალებისთვის დაგვიკავშირდით — ტელეფონი ან ვიდეო კონსულტაცია.',
+  },
 ]
 
 function Navbar() {
   const { user } = useAuth()
   const { cartCount, favoriteItems } = useStore()
-  const t = useT()
   const [mobileOpen, setMobileOpen] = useState(false)
   const navLinks = user ? [...PUBLIC_LINKS, ...AUTH_LINKS] : PUBLIC_LINKS
   const favCount = favoriteItems.length
   return (
-    <header className="fixed top-0 left-0 w-full z-[60] bg-white/95 backdrop-blur-md border-b border-outline-variant transition-all duration-300">
-    <nav className="px-container-padding h-16 flex justify-between items-center">
-      <div className="flex items-center">
-        {/* whitespace-nowrap + a smaller mobile size: at 24px the name wrapped
-            to two lines on a 375px screen, making it 72px tall inside a 64px
-            header, so it visibly spilled out of the navbar. */}
+    <header className="site-nav-dark sticky top-0 w-full z-[60] bg-[#0f1a2a] shadow-[0_4px_14px_-6px_rgba(0,0,0,0.18)]">
+      <nav className="w-full px-6 md:px-container-padding h-[72px] flex items-center justify-between gap-6">
         <a
           href="#/"
-          className="font-headline-lg text-on-surface tracking-tight text-[17px] sm:text-[24px] whitespace-nowrap"
+          className="font-headline-lg text-white tracking-tight text-[17px] sm:text-[24px] whitespace-nowrap shrink-0"
         >
-          {t('brand.name')}
+          {BRAND}
         </a>
-      </div>
-      <div className="hidden lg:flex items-center gap-8">
-        {navLinks.map((link) => (
-          <a
-            key={link.id}
-            className={`nav-link text-sm font-medium transition-colors ${
-              link.id === 'home' ? 'active text-primary' : 'text-on-surface hover:text-primary'
-            }`}
-            href={link.href}
+        <ul className="hidden lg:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <li key={link.id}>
+              <a
+                className={`nav-link text-sm font-medium transition-colors ${
+                  link.id === 'home' ? 'active text-white' : 'text-white/80 hover:text-white'
+                }`}
+                href={link.href}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-center gap-1 md:gap-2 shrink-0 text-white">
+          <AccountMenu variant="dark" />
+          {user && (
+            <>
+              <a
+                href="#/favorites"
+                className="relative p-2 text-white/90 hover:text-white transition-colors"
+                aria-label="ფავორიტები"
+              >
+                <span className="material-symbols-outlined">favorite</span>
+                {favCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-white text-[#0f1a2a] text-[10px] w-4 h-4 rounded flex items-center justify-center font-bold">
+                    {favCount}
+                  </span>
+                )}
+              </a>
+              <a
+                href="#/cart"
+                className="relative p-2 text-white/90 hover:text-white transition-colors"
+                aria-label="კალათა"
+              >
+                <span className="material-symbols-outlined">shopping_cart</span>
+                {cartCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-white text-[#0f1a2a] text-[10px] w-4 h-4 rounded flex items-center justify-center font-bold">
+                    {cartCount}
+                  </span>
+                )}
+              </a>
+            </>
+          )}
+          <button
+            className="lg:hidden p-2 text-white"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label="მენიუ"
+            aria-expanded={mobileOpen}
           >
-            {t(link.labelKey)}
-          </a>
-        ))}
-      </div>
-      <div className="flex items-center gap-1 md:gap-2">
-        <SearchBox />
-        <AccountMenu />
-        {user && (
-          <>
-            <a
-              href="#/favorites"
-              className="relative p-2 text-on-surface hover:text-primary transition-colors"
-              aria-label={t('nav.favorites')}
-            >
-              <span className="material-symbols-outlined">favorite</span>
-              {favCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 bg-primary text-on-primary text-[10px] w-4 h-4 rounded flex items-center justify-center font-bold">
-                  {favCount}
-                </span>
-              )}
-            </a>
-            <a
-              href="#/cart"
-              className="relative p-2 text-on-surface hover:text-primary transition-colors"
-              aria-label={t('nav.cart')}
-            >
-              <span className="material-symbols-outlined">shopping_cart</span>
-              {cartCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 bg-primary text-on-primary text-[10px] w-4 h-4 rounded flex items-center justify-center font-bold">
-                  {cartCount}
-                </span>
-              )}
-            </a>
-          </>
-        )}
-        {/* Icon lives in a child span: putting `material-symbols-outlined`
-            on the button itself would override `lg:hidden`'s display:none. */}
-        <button
-          className="lg:hidden p-2 text-on-surface"
-          onClick={() => setMobileOpen((o) => !o)}
-          aria-label={t('common.menu')}
-          aria-expanded={mobileOpen}
-        >
-          <span className="material-symbols-outlined">
-            {mobileOpen ? 'close' : 'menu'}
-          </span>
-        </button>
-      </div>
-    </nav>
-    {mobileOpen && (
-      <MobileMenu links={navLinks} onNavigate={() => setMobileOpen(false)} />
-    )}
+            <span className="material-symbols-outlined">
+              {mobileOpen ? 'close' : 'menu'}
+            </span>
+          </button>
+        </div>
+      </nav>
+      {mobileOpen && (
+        <MobileMenu links={navLinks} onNavigate={() => setMobileOpen(false)} />
+      )}
     </header>
   )
 }
 
 function Hero() {
-  const t = useT()
   return (
-    <section className="relative w-full h-hero flex items-center overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <img className="w-full h-full object-cover" src={HERO_IMG} alt={t('brand.name')} />
-        <div className="absolute inset-0 bg-black/50" />
-      </div>
-      {/* pt-16 offsets the fixed nav that overlays the top of the hero, so the
-          text is optically centred in the *visible* area rather than sitting
-          slightly low. */}
-      <div className="relative z-10 w-full px-container-padding pt-16">
-        <div className="max-w-2xl">
-          {/* The display-lg token is a fixed 40px, which needed 341px of width —
-              exactly the container width on a 375px screen — so the name broke
-              across two lines. Scaled down below sm; unchanged from sm up. */}
-          <h2 className="font-display-lg text-[26px] font-extrabold tracking-[-0.02em] sm:text-display-lg text-white mb-4 leading-none">
-            {t('brand.name')}
-          </h2>
-          <p className="font-body-md text-body-md text-white/80 mb-8 leading-relaxed">
-            {t('home.hero.subtitle')}
-          </p>
-          <a
-            className="inline-block bg-primary text-on-primary font-button-text text-button-text px-8 py-3 rounded transition-opacity hover:opacity-90"
-            href="#/catalog"
-          >
-            {t('catalog.viewCatalog')}
-          </a>
+    <section className="w-full bg-white">
+      <div className="max-w-[calc(1400px/var(--app-zoom))] mx-auto px-5 md:px-10 lg:px-14 pt-10 md:pt-14 pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 lg:items-stretch">
+          <div className="lg:col-span-5 flex flex-col">
+            <p className="text-[11px] tracking-[0.18em] uppercase text-secondary mb-8">
+              G&M · ავტოაქსესუარები
+            </p>
+
+            <h1 className="text-[42px] sm:text-[56px] md:text-[64px] font-extrabold tracking-[-0.04em] leading-[0.95] uppercase text-on-surface mb-8">
+              G&M
+              <br />
+              აქსესუარები
+            </h1>
+
+            <p className="text-secondary text-sm md:text-base leading-relaxed max-w-sm mb-8">
+              ხარისხიანი ავტოაქსესუარები, სანდო მომსახურებით. აღმოაჩინეთ პრემიუმ
+              კლასის დეტალები თქვენი ავტომობილისთვის.
+            </p>
+
+            <a
+              href="#/catalog"
+              className="inline-flex w-fit bg-[#0f1a2a] text-white text-sm font-semibold px-7 py-3.5 hover:bg-primary transition-colors mt-auto"
+            >
+              კატალოგის ნახვა
+            </a>
+          </div>
+
+          <div className="lg:col-span-7 flex flex-col">
+            <figure className="relative flex flex-col flex-1 h-full">
+              <div className="relative flex-1 min-h-[260px] overflow-hidden bg-surface-container-low lg:min-h-0">
+                <img
+                  className="absolute inset-0 w-full h-full object-cover"
+                  src={HERO_IMG}
+                  alt={BRAND}
+                />
+              </div>
+              <figcaption className="mt-3 flex items-center justify-between gap-4 text-[11px] tracking-wide uppercase text-secondary shrink-0">
+                <span>Premium auto · Kutaisi / Georgia</span>
+                <a
+                  href="#/catalog"
+                  className="text-on-surface font-semibold hover:text-primary tracking-[0.12em]"
+                >
+                  View more →
+                </a>
+              </figcaption>
+            </figure>
+          </div>
         </div>
+
+        <CategoryStrip />
       </div>
     </section>
   )
 }
 
 function About() {
-  const t = useT()
   return (
-    <section className="py-24 md:py-32 px-container-padding w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-      {/* The logo is square (2024x2024), so the frame is square too — then
-          object-cover fills it exactly with no cropping and no dead space.
-          Width is capped so it doesn't balloon on wide screens. */}
-      {/* Centred within its own grid column on desktop — left-aligned it hugged
-          the page edge and left a large void before the text. Mobile keeps the
-          base `justify-center`, so it's unaffected. */}
+    <section className="py-24 md:py-32 px-6 md:px-container-padding w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center max-w-[calc(1400px/var(--app-zoom))] mx-auto">
       <div className="order-2 md:order-1 flex justify-center">
         <div className="relative w-full max-w-[420px] aspect-square overflow-hidden rounded border border-outline-variant">
-          <img
-            className="w-full h-full object-cover"
-            src={ABOUT_IMG}
-            alt={t('brand.name')}
-          />
+          <img className="w-full h-full object-cover" src={ABOUT_IMG} alt={BRAND} />
         </div>
       </div>
       <div className="order-1 md:order-2">
-        <span className="font-label-sm text-label-sm text-secondary block mb-3">
-          {t('home.about.eyebrow')}
+        <span className="text-xs font-semibold tracking-wider text-secondary uppercase block mb-3">
+          ჩვენს შესახებ
         </span>
-        <h3 className="font-headline-lg text-3xl md:text-4xl text-on-surface leading-tight mb-6">
-          {t('home.about.title')}
+        <h3 className="font-headline-lg text-3xl md:text-4xl text-on-surface tracking-tight leading-tight mb-6">
+          ავტოინდუსტრიის დახვეწილობა და უმაღლესი ხარისხი
         </h3>
-        <div className="space-y-4 text-on-surface/70 max-w-md">
-          <p>{t('home.about.p1')}</p>
-          <p>{t('home.about.p2')}</p>
+        <div className="space-y-4 text-secondary max-w-md text-base leading-relaxed">
           <p>
-            {t('home.about.whatsapp')}{' '}
+            ჩვენ გთავაზობთ მხოლოდ საუკეთესო ხარისხის ავტონაწილებსა და
+            აქსესუარებს, რომლებიც შერჩეულია განსაკუთრებული ყურადღებით.
+          </p>
+          <p>
+            ჩვენი სერვისი მოიცავს სწრაფ მოძიებასა და მიწოდებას ქუთაისსა და მთელი
+            საქართველოს მასშტაბით, რაც გიზოგავთ დროსა და ენერგიას.
+          </p>
+          <p>
+            სწრაფი და დეტალური პასუხისთვის კონკრეტული პროდუქტის შესახებ მომწერეთ
+            ვაცაპზე{' '}
             <a
               href="https://wa.me/995557783549"
               target="_blank"
@@ -200,53 +223,34 @@ function About() {
   )
 }
 
-function AccordionItem({ item, isOpen, onToggle }) {
-  const t = useT()
+function HowItWorks() {
   return (
-    <div className="border-b border-outline-variant">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between py-5 text-left"
-      >
-        <span className="text-base font-semibold text-on-surface pr-4">{t(item.qKey)}</span>
-        <span
-          className={`material-symbols-outlined text-on-surface-variant shrink-0 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        >
-          expand_more
-        </span>
-      </button>
-      <div
-        className="overflow-hidden transition-all duration-200"
-        style={{ maxHeight: isOpen ? "300px" : "0", opacity: isOpen ? 1 : 0 }}
-      >
-        <p className="pb-5 text-sm text-on-surface/70 leading-relaxed">{t(item.aKey)}</p>
-      </div>
-    </div>
-  )
-}
-
-function Faq() {
-  const t = useT()
-  const [openIndex, setOpenIndex] = useState(null)
-  return (
-    <section className="py-24 md:py-32 px-container-padding bg-surface-container-low w-full">
-      <div className="max-w-3xl mx-auto">
-        <span className="font-label-sm text-label-sm text-secondary block mb-3">FAQ</span>
-        <h3 className="font-headline-lg text-3xl md:text-4xl text-on-surface mb-12">
-          {t('home.faq.title')}
-        </h3>
-        <div className="border-t border-outline-variant">
-          {FAQ.map((item, i) => (
-            <AccordionItem
-              key={item.qKey}
-              item={item}
-              isOpen={openIndex === i}
-              onToggle={() => setOpenIndex(openIndex === i ? null : i)}
-            />
-          ))}
+    <section className="py-20 md:py-28 bg-surface-container-low w-full">
+      <div className="max-w-[calc(1280px/var(--app-zoom))] mx-auto px-6 md:px-container-padding">
+        <div className="max-w-2xl mb-12 md:mb-16">
+          <h2 className="font-headline-lg text-3xl md:text-4xl text-on-surface tracking-tight">
+            როგორ მუშაობს
+          </h2>
+          <p className="mt-3 text-secondary text-base leading-relaxed">
+            შეკვეთა არის მოთხოვნა — ჩვენ ვპოულობთ და გაწვდით. სამი ნაბიჯი,
+            უმეტესი კითხვა აქ იხსნება.
+          </p>
         </div>
+
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 list-none p-0 m-0">
+          {HOW_STEPS.map((step, i) => (
+            <li
+              key={step.n}
+              className={i > 0 ? 'md:border-l md:border-outline-variant md:pl-12' : ''}
+            >
+              <span className="block text-5xl font-extrabold text-primary/15 tracking-tight mb-4 tabular-nums">
+                {step.n}
+              </span>
+              <h3 className="text-xl font-bold text-on-surface mb-2">{step.title}</h3>
+              <p className="text-secondary text-sm leading-relaxed">{step.body}</p>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   )
@@ -254,14 +258,12 @@ function Faq() {
 
 export default function Home() {
   return (
-    <>
-      <main className="min-h-screen flex flex-col">
-        <Navbar />
-        <Hero />
-        <About />
-        <Faq />
-        <Footer />
-      </main>
-    </>
+    <main className="min-h-screen flex flex-col bg-white">
+      <Navbar />
+      <Hero />
+      <HowItWorks />
+      <About />
+      <Footer />
+    </main>
   )
 }

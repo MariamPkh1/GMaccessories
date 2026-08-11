@@ -1,22 +1,19 @@
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
 import { fmt, productImage } from '../products'
-import { useLocale, useT } from '../i18n'
 
-// Maps the status stored in the database to a translation key rather than to a
-// finished sentence. An unknown status falls back to the raw value, so a status
-// added server-side later shows something instead of nothing.
-const STATUS_KEYS = {
-  pending: 'orders.status.pending',
-  contacted: 'orders.status.contacted',
-  confirmed: 'orders.status.confirmed',
-  arrived: 'orders.status.arrived',
-  completed: 'orders.status.completed',
-  cancelled: 'orders.status.cancelled',
+// An unknown status falls back to the raw database value, so a status added
+// server-side later shows something instead of nothing.
+const STATUS_LABELS = {
+  pending: 'მოლოდინში',
+  contacted: 'დაკავშირებულია',
+  confirmed: 'დადასტურებულია',
+  arrived: 'ჩამოსულია',
+  completed: 'დასრულებულია',
+  cancelled: 'გაუქმებულია',
 }
 
 function OrderCard({ order }) {
-  const { t, locale } = useLocale()
   const items = order.order_items || []
   const total = items.reduce((sum, i) => sum + i.price_at_order * i.quantity, 0)
   return (
@@ -24,14 +21,14 @@ function OrderCard({ order }) {
       <div className="flex flex-wrap justify-between items-center gap-4 mb-4 pb-4 border-b border-outline-variant">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-secondary">
-            {t('orders.number', { id: order.id.slice(0, 8) })}
+            შეკვეთა #{order.id.slice(0, 8)}
           </p>
           <p className="text-xs text-secondary mt-1">
-            {new Date(order.created_at).toLocaleDateString(locale === 'en' ? 'en-GB' : 'ka-GE')}
+            {new Date(order.created_at).toLocaleDateString('ka-GE')}
           </p>
         </div>
         <span className="text-xs font-semibold uppercase tracking-wider text-primary border border-primary rounded px-2.5 py-1">
-          {STATUS_KEYS[order.status] ? t(STATUS_KEYS[order.status]) : order.status}
+          {STATUS_LABELS[order.status] || order.status}
         </span>
       </div>
       <div className="space-y-3">
@@ -47,9 +44,9 @@ function OrderCard({ order }) {
               )}
               <div className="min-w-0">
                 <p className="text-sm text-on-surface truncate">
-                  {item.products?.title_ka || t('orders.deletedProduct')}
+                  {item.products?.title_ka || 'პროდუქტი წაშლილია'}
                 </p>
-                {item.size && <p className="text-xs text-secondary">{t('product.size')} {item.size}</p>}
+                {item.size && <p className="text-xs text-secondary">ზომა: {item.size}</p>}
               </div>
             </div>
             <p className="text-sm text-secondary flex-shrink-0">
@@ -59,7 +56,7 @@ function OrderCard({ order }) {
         ))}
       </div>
       <div className="mt-4 pt-4 border-t border-outline-variant flex justify-between font-bold text-on-surface">
-        <span>{t('orders.total')}</span>
+        <span>ჯამი</span>
         <span>{fmt(total)}</span>
       </div>
     </div>
@@ -67,19 +64,18 @@ function OrderCard({ order }) {
 }
 
 function EmptyOrders() {
-  const t = useT()
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <span className="material-symbols-outlined text-outline text-5xl mb-4">receipt_long</span>
-      <p className="text-lg text-secondary mb-2">{t('orders.empty')}</p>
+      <p className="text-lg text-secondary mb-2">შეკვეთები არ გაქვთ</p>
       <p className="text-sm text-secondary mb-6">
-        {t('orders.emptyHint')}
+        გაგზავნეთ შეკვეთის მოთხოვნა კალათიდან და აქ ნახავთ მის სტატუსს
       </p>
       <a
         href="#/catalog"
         className="bg-primary text-on-primary px-6 py-2.5 text-sm font-semibold rounded transition-opacity hover:opacity-90"
       >
-        {t('catalog.goToCatalog')}
+        კატალოგზე გადასვლა
       </a>
     </div>
   )
@@ -87,14 +83,13 @@ function EmptyOrders() {
 
 export default function Orders() {
   const { orders, ordersLoading } = useStore()
-  const t = useT()
   return (
     <>
       <SiteNav active="orders" />
       <main className="px-container-padding py-12 md:py-16 max-w-[1000px] mx-auto min-h-screen">
-        <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">{t('orders.title')}</h1>
+        <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">ჩემი შეკვეთები</h1>
         {ordersLoading ? (
-          <p className="text-secondary text-center py-24">{t('common.loading')}</p>
+          <p className="text-secondary text-center py-24">იტვირთება...</p>
         ) : orders.length > 0 ? (
           <div className="space-y-6">
             {orders.map((order) => (

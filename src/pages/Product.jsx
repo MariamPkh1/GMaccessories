@@ -2,15 +2,12 @@ import { useMemo, useState } from 'react'
 import SiteNav from '../components/SiteNav'
 import { useStore } from '../store'
 import { fmt, sizeEntries, priceForSize, hasVariablePricing, displayPrice, productImage } from '../products'
-import { useLocale, useT } from '../i18n'
 import Footer from '../components/Footer'
 
 // Videos open on the platform they're hosted on rather than being embedded:
 // Instagram and Facebook refuse to be iframed, so an embed would silently show
 // an empty box for anything that isn't YouTube.
 function VideoLink({ url }) {
-  // Before the early return: hook order has to be identical on every render.
-  const t = useT()
   if (!url) return null
   return (
     <a
@@ -20,7 +17,7 @@ function VideoLink({ url }) {
       className="flex items-center gap-2.5 w-full border border-outline-variant rounded px-4 py-3 text-sm font-semibold text-on-surface transition-colors hover:border-primary hover:text-primary"
     >
       <span className="material-symbols-outlined text-[20px]">play_circle</span>
-      {t('product.watchVideo')}
+      დააწკაპე ვიდეოს სანახავად
       <span className="material-symbols-outlined text-[16px] ml-auto text-secondary">open_in_new</span>
     </a>
   )
@@ -68,7 +65,6 @@ function Gallery({ product }) {
 
 function Details({ product }) {
   const { addToCart, toggleFavorite, isFavorite } = useStore()
-  const { t, tCategory } = useLocale()
   const sizeOptions = sizeEntries(product)
   const hasSizeOptions = sizeOptions.length > 0
   const hasSpecs = product.specifications?.length > 0
@@ -90,7 +86,7 @@ function Details({ product }) {
     <div className="space-y-6">
       <div>
         <span className="text-xs font-medium uppercase tracking-wider text-secondary mb-2 block">
-          {tCategory(product.category)}
+          {product.category}
         </span>
         <h1 className="text-2xl md:text-3xl font-headline-lg text-on-surface leading-tight">
           {product.title_ka}
@@ -101,7 +97,7 @@ function Details({ product }) {
 
       {hasSizeOptions && (
         <div>
-          <span className="text-sm font-semibold text-on-surface mb-3 block">{t('product.size')}</span>
+          <span className="text-sm font-semibold text-on-surface mb-3 block">ზომა:</span>
           <div className="flex flex-wrap gap-2">
             {sizeOptions.map((opt) => (
               <button
@@ -133,7 +129,7 @@ function Details({ product }) {
           <span className="material-symbols-outlined text-[18px]">
             {added ? "check" : "shopping_cart"}
           </span>
-          {added ? t('product.added') : t('product.addToCart')}
+          {added ? 'დამატებულია' : 'კალათაში დამატება'}
         </button>
         <button
           onClick={() => toggleFavorite(product.id)}
@@ -147,21 +143,21 @@ function Details({ product }) {
           >
             favorite
           </span>
-          {favorited ? t('product.inFavorites') : t('product.addToFavorites')}
+          {favorited ? 'ფავორიტებშია' : 'ფავორიტებში დამატება'}
         </button>
 
         <VideoLink url={product.video_url} />
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-on-surface mb-2 uppercase tracking-wider">{t('product.description')}</h3>
+        <h3 className="text-sm font-semibold text-on-surface mb-2 uppercase tracking-wider">აღწერა</h3>
         <p className="text-sm text-on-surface/70 leading-relaxed">{product.description_ka}</p>
       </div>
 
       {hasSpecs && (
         <div className="border-t border-outline-variant pt-6">
           <h3 className="text-sm font-semibold text-on-surface mb-4 uppercase tracking-wider">
-            {t('product.specifications')}
+            მახასიათებლები
           </h3>
           <div>
             {product.specifications.map((spec) => (
@@ -182,7 +178,6 @@ function Details({ product }) {
 
 function RelatedCard({ item }) {
   const { toggleFavorite, isFavorite } = useStore()
-  const t = useT()
   const favorited = isFavorite(item.id)
   return (
     <a href={`#/product/${item.id}`} className="product-card group block border border-outline-variant rounded bg-white overflow-hidden">
@@ -210,7 +205,7 @@ function RelatedCard({ item }) {
       </div>
       <div className="p-4">
         <h4 className="text-sm font-semibold text-on-surface truncate mb-2">{item.title_ka}</h4>
-        <p className="text-base font-bold text-on-surface">{displayPrice(item, t).text}</p>
+        <p className="text-base font-bold text-on-surface">{displayPrice(item).text}</p>
       </div>
     </a>
   )
@@ -218,8 +213,6 @@ function RelatedCard({ item }) {
 
 export default function Product({ id }) {
   const { getProduct, products, productsLoading } = useStore()
-  // tCategory as well as t: the breadcrumb shows the category name.
-  const { t, tCategory } = useLocale()
   const product = getProduct(id)
 
   const related = useMemo(() => {
@@ -232,7 +225,7 @@ export default function Product({ id }) {
       <>
         <SiteNav active="catalog" />
         <main className="min-h-screen flex items-center justify-center text-secondary">
-          {t('common.loading')}
+          იტვირთება...
         </main>
       </>
     )
@@ -243,9 +236,9 @@ export default function Product({ id }) {
       <>
         <SiteNav active="catalog" />
         <main className="min-h-[60vh] flex flex-col items-center justify-center text-center">
-          <p className="text-secondary mb-4">{t('product.notFound')}</p>
+          <p className="text-secondary mb-4">პროდუქტი ვერ მოიძებნა</p>
           <a href="#/catalog" className="text-sm font-medium text-primary underline underline-offset-4">
-            {t('catalog.viewCatalog')}
+            კატალოგის ნახვა
           </a>
         </main>
         <Footer />
@@ -259,10 +252,10 @@ export default function Product({ id }) {
       <main className="px-container-padding py-12 md:py-16 w-full">
         <nav className="flex items-center gap-2 text-sm text-secondary mb-8 overflow-x-auto whitespace-nowrap">
           <a className="hover:text-on-surface transition-colors" href="#/catalog">
-            {t('catalog.title')}
+            კატალოგი
           </a>
           <span>/</span>
-          <span className="text-on-surface">{tCategory(product.category)}</span>
+          <span className="text-on-surface">{product.category}</span>
           <span>/</span>
           <span className="text-on-surface">{product.title_ka}</span>
         </nav>
@@ -276,10 +269,10 @@ export default function Product({ id }) {
           <div className="mt-20 pt-12 border-t border-outline-variant">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-xl font-bold text-on-surface tracking-tight">
-                {t('product.related')}
+                შეიძლება დაგაინტერესოთ
               </h2>
               <a href="#/catalog" className="text-sm font-medium text-primary hover:underline">
-                {t('product.viewAll')}
+                ყველას ნახვა
               </a>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

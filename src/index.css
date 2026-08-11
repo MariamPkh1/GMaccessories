@@ -1,10 +1,16 @@
+/* Tailwind must come first so the hand-written rules below can override its
+   utilities -- `html .min-h-screen` in particular depends on winning. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Base */
 * {
   box-sizing: border-box;
 }
 
 :root {
-  /* Global 80% scale — the "zoomed out" look, baked in. */
+  /* Global 80% scale — zoomed-out look so UI/text stay comfortable. */
   --app-zoom: 0.8;
 }
 
@@ -17,20 +23,27 @@ html {
 /* The root zoom also shrinks viewport units: Tailwind's `min-h-screen`
    (100vh) ends up rendering at only 80% of the real viewport height, leaving
    a blank strip under short pages. Dividing by the zoom restores true
-   full-height. Scoped under `html` purely to out-specify Tailwind's own rule
-   regardless of stylesheet order. */
+   full-height. Scoped under `html` to out-specify Tailwind. */
 html .min-h-screen {
   min-height: calc(100vh / var(--app-zoom));
 }
 
-/* Landing hero. Height is expressed as the fraction of the *real* viewport we
-   want it to occupy, then divided back out by the zoom (same issue as above —
-   a raw 85vh only rendered at 68% of the screen).
-   82% is tuned so the logo below peeks just far enough to hint at more
-   content without showing the whole thing. */
+/* Landing hero. Height is the fraction of the *real* viewport we want, then
+   divided by the zoom so it still fills correctly at 80%. */
 .h-hero {
   height: calc(88vh / var(--app-zoom));
   min-height: calc(480px / var(--app-zoom));
+}
+
+/* Category rail on the home page. The scrollbar is hidden because the rail has
+   its own arrow buttons and a visible bar under the cards looked like a stray
+   divider; scrolling by touch, wheel and keyboard still works. */
+.category-rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.category-rail::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -85,6 +98,10 @@ h1, h2, h3, h4, h5, h6 {
 .nav-link:hover::after,
 .nav-link.active::after {
   width: 100%;
+}
+/* Dark home header — white underline on navy */
+.site-nav-dark .nav-link::after {
+  background-color: #fff;
 }
 
 /* Modal scale-in */

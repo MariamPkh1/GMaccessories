@@ -1,68 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store'
 import { CATEGORIES, displayPrice, minPrice, maxPrice, productImage } from '../products'
-import { useLocale, useT } from '../i18n'
+import { categoryMaterialIcon } from '../lib/categoryIcons'
 import SiteNav from '../components/SiteNav'
 import Footer from '../components/Footer'
 
-// Opaque sentinel, never shown to the user: the label is translated at render
-// time. It must not be a display string, because ALL is also compared against
-// the category taken from the URL.
+// Opaque sentinel, never shown to the user: it stands in for "no category
+// filter" and is also compared against the category taken from the URL, so it
+// must not collide with a real category name.
 const ALL = '__all__'
 const TABS = [ALL, ...CATEGORIES]
-const PAGE_SIZE = 6
+const PAGE_SIZE = 9
+
+// Categories are stored in the database as their Georgian label, so a category
+// is its own display text; only the ALL sentinel needs one supplied.
+const categoryLabel = (cat) => (cat === ALL ? 'ყველა' : cat)
 
 const SORT_OPTIONS = [
-  { value: 'newest', labelKey: 'catalog.sort.newest' },
-  { value: 'price-asc', labelKey: 'catalog.sort.priceAsc' },
-  { value: 'price-desc', labelKey: 'catalog.sort.priceDesc' },
+  { value: 'newest', label: 'უახლესი' },
+  { value: 'price-asc', label: 'ფასი: დაბლიდან მაღლა' },
+  { value: 'price-desc', label: 'ფასი: მაღლიდან დაბლა' },
 ]
 
-function SortDropdown({ sortBy, onChange }) {
-  const t = useT()
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 text-xs font-medium text-secondary border border-outline-variant px-3 py-1.5 rounded transition-colors hover:border-on-surface"
-      >
-        <span className="material-symbols-outlined text-[16px]">swap_vert</span>
-        {t('catalog.sort')}
-      </button>
-      {/* Panel is anchored left on mobile: these controls sit at the left edge
-          there, so a right-anchored panel hangs off-screen and gets clipped.
-          Right-anchored from lg up, where the controls are right-aligned. */}
-      {open && (
-        <div
-          className="absolute top-full left-0 lg:left-auto lg:right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white border border-outline-variant shadow-lg z-[80]"
-          onMouseLeave={() => setOpen(false)}
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => {
-                onChange(opt.value)
-                setOpen(false)
-              }}
-              className={`w-full flex items-center justify-between text-left px-4 py-3 text-sm hover:bg-surface-container-low transition-colors ${
-                opt.value === sortBy ? "text-primary font-semibold" : "text-on-surface"
-              }`}
-            >
-              {t(opt.labelKey)}
-              {opt.value === sortBy && (
-                <span className="material-symbols-outlined text-[18px]">check</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+const TOOLBAR_BTN =
+  'flex items-center gap-1.5 border border-outline-variant rounded-[6px] px-2.5 py-1.5 text-[13px] font-medium bg-white transition-colors'
+
+// ---------------------------------------------------------------------------
 
 function FilterDropdown({ priceRange, onApply }) {
-  const t = useT()
   const [open, setOpen] = useState(false)
   const [min, setMin] = useState(priceRange.min)
   const [max, setMax] = useState(priceRange.max)
@@ -72,45 +37,36 @@ function FilterDropdown({ priceRange, onApply }) {
     setMax(priceRange.max)
   }, [priceRange])
 
-  const active = priceRange.min !== "" || priceRange.max !== ""
-
-  const apply = () => {
-    onApply({ min, max })
-    setOpen(false)
-  }
-
-  const clear = () => {
-    onApply({ min: "", max: "" })
-    setOpen(false)
-  }
+  const active = priceRange.min !== '' || priceRange.max !== ''
 
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1.5 text-xs font-medium border px-3 py-1.5 rounded transition-colors ${
-          active ? "border-primary text-primary" : "border-outline-variant text-secondary hover:border-on-surface"
+        className={`${TOOLBAR_BTN} ${
+          active ? 'border-primary text-primary' : 'text-secondary hover:text-on-surface'
         }`}
       >
-        <span className="material-symbols-outlined text-[16px]">tune</span>
-        {t('catalog.filter')}
+        <span className="material-symbols-outlined text-[18px]">tune</span>
+        ფილტრი
       </button>
       {open && (
         <div
-          className="absolute top-full left-0 lg:left-auto lg:right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white border border-outline-variant shadow-lg z-[80] p-4 sm:p-6"
+          className="absolute top-full right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white border border-outline-variant rounded-[10px] shadow-lg z-[80] p-4"
           onMouseLeave={() => setOpen(false)}
         >
-          <p className="text-xs font-medium text-secondary uppercase tracking-wider mb-4">
-            {t('catalog.filter.price')}
+          <p className="text-[13px] font-bold text-secondary uppercase tracking-wider mb-3">
+            ფასი (₾)
           </p>
-          <div className="flex items-center gap-2 mb-5">
+          <div className="flex items-center gap-2 mb-4">
             <input
               type="number"
               min="0"
               value={min}
               onChange={(e) => setMin(e.target.value)}
-              placeholder={t('catalog.filter.min')}
-              className="w-full min-w-0 border border-outline-variant rounded px-2.5 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+              placeholder="დან"
+              className="w-full min-w-0 border border-outline-variant rounded-[6px] px-2.5 py-1.5 text-sm focus:outline-none focus:border-primary transition-colors"
             />
             <span className="text-secondary shrink-0">—</span>
             <input
@@ -118,24 +74,30 @@ function FilterDropdown({ priceRange, onApply }) {
               min="0"
               value={max}
               onChange={(e) => setMax(e.target.value)}
-              placeholder={t('catalog.filter.max')}
-              className="w-full min-w-0 border border-outline-variant rounded px-2.5 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+              placeholder="მდე"
+              className="w-full min-w-0 border border-outline-variant rounded-[6px] px-2.5 py-1.5 text-sm focus:outline-none focus:border-primary transition-colors"
             />
           </div>
-          {/* Stacked on narrow panels — the two Georgian labels don't fit side
-              by side once the panel is clamped to the viewport width. */}
           <div className="flex flex-col sm:flex-row gap-2">
             <button
-              onClick={apply}
-              className="flex-grow bg-primary text-on-primary py-2 rounded text-sm font-semibold transition-opacity hover:opacity-90"
+              type="button"
+              onClick={() => {
+                onApply({ min, max })
+                setOpen(false)
+              }}
+              className="flex-grow bg-on-surface text-white py-1.5 rounded-[6px] text-sm font-semibold transition-opacity hover:opacity-90"
             >
-              {t('catalog.filter.apply')}
+              გამოყენება
             </button>
             <button
-              onClick={clear}
-              className="px-4 py-2 border border-outline-variant rounded text-sm font-medium transition-colors hover:border-on-surface whitespace-nowrap"
+              type="button"
+              onClick={() => {
+                onApply({ min: '', max: '' })
+                setOpen(false)
+              }}
+              className="px-3 py-1.5 border border-outline-variant rounded-[6px] text-sm font-medium transition-colors hover:border-on-surface whitespace-nowrap"
             >
-              {t('catalog.filter.clear')}
+              გასუფთავება
             </button>
           </div>
         </div>
@@ -144,63 +106,175 @@ function FilterDropdown({ priceRange, onApply }) {
   )
 }
 
-function CatalogHeader({ activeCat, onChange, sortBy, onSortChange, priceRange, onPriceApply }) {
-  const { t, tCategory } = useLocale()
-  // ALL is a sentinel rather than a real category, so it gets its own label.
-  const tabLabel = (cat) => (cat === ALL ? t('catalog.all') : tCategory(cat))
+function SortDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <header className="mb-8">
-      <h1 className="text-3xl md:text-4xl font-headline-lg text-on-surface mb-8">{t('catalog.title')}</h1>
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 pb-6 border-b border-outline-variant">
-        {/* Mobile/tablet: a single select. With 9 categories the tab row
-            overflowed the screen and scrolled sideways, hiding most of them. */}
-        <div className="relative lg:hidden">
-          <select
-            value={activeCat}
-            onChange={(e) => onChange(e.target.value)}
-            aria-label={t('catalog.category')}
-            className="w-full appearance-none border border-outline-variant rounded pl-4 pr-10 py-2.5 text-sm font-medium text-on-surface bg-white focus:outline-none focus:border-primary transition-colors"
-          >
-            {TABS.map((cat) => (
-              <option key={cat} value={cat}>
-                {tabLabel(cat)}
-              </option>
-            ))}
-          </select>
-          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-secondary text-[20px] pointer-events-none">
-            expand_more
-          </span>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className={`${TOOLBAR_BTN} text-secondary hover:text-on-surface`}
+      >
+        <span className="material-symbols-outlined text-[18px]">swap_vert</span>
+        სორტირება
+      </button>
+      {open && (
+        <div
+          role="listbox"
+          aria-label="სორტირება"
+          className="absolute top-full right-0 mt-2 min-w-[220px] bg-white border border-outline-variant rounded-[10px] shadow-lg z-[80] py-2 px-1"
+          onMouseLeave={() => setOpen(false)}
+        >
+          {SORT_OPTIONS.map((opt) => {
+            const selected = opt.value === value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => {
+                  onChange(opt.value)
+                  setOpen(false)
+                }}
+                className={`w-full flex items-center justify-between gap-4 px-3 py-2.5 text-left text-[14px] rounded-[6px] transition-colors hover:bg-surface-container-low ${
+                  selected ? 'font-bold text-primary' : 'font-normal text-on-surface'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {selected && (
+                  <span className="material-symbols-outlined text-[18px] text-primary shrink-0">
+                    check
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SearchBand({ value, onChange }) {
+  return (
+    <form onSubmit={(e) => e.preventDefault()} className="w-full relative">
+      <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary text-[20px] pointer-events-none">
+        search
+      </span>
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="მოძებნეთ პროდუქტი..."
+        aria-label="ძებნა"
+        className="w-full h-12 pl-11 pr-28 bg-[#f0f0f0] rounded-[8px] border border-outline-variant text-[15px] text-on-surface placeholder:text-secondary focus:outline-none focus:border-primary transition-colors"
+      />
+      <button
+        type="submit"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-on-surface text-white h-9 px-5 rounded-[6px] text-[13px] font-medium transition-opacity hover:opacity-90"
+      >
+        ძებნა
+      </button>
+    </form>
+  )
+}
+
+// Category list. Flat, not nested: products.category is a single flat value, so
+// an expandable tree would be inventing a hierarchy the data doesn't have.
+function CategorySidebar({ activeCat, onChange }) {
+  return (
+    <aside className="hidden md:block self-stretch w-full">
+      {/* Panel stretches with the product column; categories stay packed at the
+          top and the leftover height is empty space at the bottom. */}
+      <div className="h-full min-h-[calc((100vh/var(--app-zoom))-160px)] w-full border-r border-outline-card bg-white py-6 pr-2 pb-10 flex flex-col rounded-[12px] shadow-sm">
+        <div className="pb-4 border-b border-outline-variant shrink-0">
+          <h2 className="text-base font-semibold text-on-surface leading-tight">
+            კატეგორიები
+          </h2>
+          <p className="text-base font-medium text-secondary mt-0.5 whitespace-nowrap">
+            აირჩიეთ განყოფილება
+          </p>
         </div>
 
-        {/* Desktop: keep the underlined tab row — there's room for it. */}
-        <div className="hidden lg:flex items-center gap-1 overflow-x-auto pb-1">
-          {TABS.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => onChange(cat)}
-              className={`relative px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
-                activeCat === cat ? "text-primary" : "text-secondary hover:text-on-surface"
-              }`}
-            >
-              {tabLabel(cat)}
-              {activeCat === cat && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-3">
-          <FilterDropdown priceRange={priceRange} onApply={onPriceApply} />
-          <SortDropdown sortBy={sortBy} onChange={onSortChange} />
-        </div>
+        <nav className="flex flex-col gap-0.5 mt-2 shrink-0">
+          {TABS.map((cat) => {
+            const on = cat === activeCat
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => onChange(cat)}
+                aria-current={on ? 'true' : undefined}
+                className={`flex items-center justify-between gap-2 pr-1.5 py-2.5 rounded-[6px] text-left text-base transition-all duration-150 ${
+                  on
+                    ? 'font-semibold text-black bg-surface-container-low border-l-4 border-black pl-1.5'
+                    : 'font-medium text-secondary hover:bg-surface-container-high hover:text-black pl-0'
+                }`}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="material-symbols-outlined text-[22px] shrink-0">
+                    {cat === ALL ? 'apps' : categoryMaterialIcon(cat)}
+                  </span>
+                  <span className="truncate">{categoryLabel(cat)}</span>
+                </span>
+                {on && (
+                  <span className="material-symbols-outlined text-[20px] shrink-0">
+                    expand_more
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="flex-1 min-h-[120px]" aria-hidden="true" />
       </div>
-    </header>
+    </aside>
+  )
+}
+
+function CatalogToolbar({
+  activeCat,
+  onCategoryChange,
+  sortBy,
+  onSortChange,
+  priceRange,
+  onPriceApply,
+}) {
+  return (
+    <div>
+      <div className="relative md:hidden mb-4">
+        <select
+          value={activeCat}
+          onChange={(e) => onCategoryChange(e.target.value)}
+          aria-label="კატეგორია"
+          className="w-full appearance-none border border-outline-variant rounded-[6px] bg-white pl-3 pr-9 py-2 text-[13px] font-medium text-on-surface focus:outline-none focus:border-primary transition-colors"
+        >
+          {TABS.map((cat) => (
+            <option key={cat} value={cat}>
+              {categoryLabel(cat)}
+            </option>
+          ))}
+        </select>
+        <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary text-[20px] pointer-events-none">
+          expand_more
+        </span>
+      </div>
+
+      <div className="flex justify-end items-center gap-2 flex-wrap border-b border-outline-variant pb-3">
+        <FilterDropdown priceRange={priceRange} onApply={onPriceApply} />
+        <SortDropdown value={sortBy} onChange={onSortChange} />
+      </div>
+    </div>
   )
 }
 
 function ProductCard({ product }) {
   const { addToCart, toggleFavorite, isFavorite } = useStore()
-  const { t, tCategory } = useLocale()
   const [added, setAdded] = useState(false)
   const favorited = isFavorite(product.id)
 
@@ -219,71 +293,60 @@ function ProductCard({ product }) {
   }
 
   return (
-    <article className="product-card group border border-outline-variant rounded bg-white overflow-hidden">
-      <div
-        onClick={() => {
-          window.location.hash = `#/product/${product.id}`
-        }}
-        className="relative aspect-[4/3] overflow-hidden bg-surface-container-low cursor-pointer"
+    <article className="group flex flex-col">
+      <a
+        href={`#/product/${product.id}`}
+        className="relative bg-[#f5f5f5] overflow-hidden shrink-0 w-full aspect-square mb-3"
       >
         <img
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover w-full h-full"
           src={productImage(product, { thumb: true })}
           alt={product.title_ka}
           loading="lazy"
         />
         <button
           onClick={handleToggleFavorite}
-          className="absolute top-3 right-3 p-1.5 bg-white/90 backdrop-blur-sm rounded transition-colors hover:bg-white"
-          aria-label="favorite"
+          aria-label={favorited ? 'ფავორიტებშია' : 'ფავორიტებში დამატება'}
+          className="absolute top-2 left-2 p-1.5 text-secondary hover:text-primary transition-colors"
         >
           <span
-            className={`material-symbols-outlined text-[18px] ${favorited ? "text-error" : "text-on-surface"}`}
+            className={`material-symbols-outlined text-[20px] ${favorited ? 'text-error' : ''}`}
             style={{ fontVariationSettings: favorited ? "'FILL' 1" : "'FILL' 0" }}
           >
             favorite
           </span>
         </button>
-        {/* `invisible` (not just opacity-0) so the hidden overlay is dropped
-            from hit-testing — an opacity-0 element still receives clicks, and
-            this one covers the whole image, which was stealing every click
-            meant for the heart button above it. The overlay stays
-            click-through; only the button inside it is interactive. */}
-        <div className="absolute inset-0 bg-black/20 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center pb-4 pointer-events-none">
-          <button
-            onClick={handleAddToCart}
-            className="bg-primary text-on-primary text-xs font-semibold px-4 py-2 rounded flex items-center gap-1.5 pointer-events-auto"
-          >
-            <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
-            {added ? t('product.added') : t('product.addToCart')}
-          </button>
-        </div>
-      </div>
-      <div className="p-4">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-secondary mb-1 block">
-          {tCategory(product.category)}
+      </a>
+
+      <div className="flex items-baseline justify-between gap-2 mb-1">
+        <span className="text-[18px] font-bold text-primary truncate">
+          {displayPrice(product).text}
         </span>
-        <h3 className="text-sm font-semibold text-on-surface truncate mb-1">{product.title_ka}</h3>
-        {/* The admin form collects a short description but nothing displayed it,
-            so the field looked broken. Clamped to two lines and rendered only
-            when present, so cards without one keep their original height. */}
-        {product.short_description_ka && (
-          <p className="text-xs text-secondary leading-snug mb-2 line-clamp-2">
-            {product.short_description_ka}
-          </p>
-        )}
-        <p className="text-base font-bold text-on-surface">{displayPrice(product, t).text}</p>
+        <button
+          onClick={handleAddToCart}
+          aria-label={added ? 'დამატებულია' : 'კალათაში დამატება'}
+          className="shrink-0 text-secondary hover:text-primary transition-colors p-0.5"
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            {added ? 'check' : 'shopping_cart'}
+          </span>
+        </button>
       </div>
+
+      <h3 className="text-[14px] font-medium text-on-surface leading-snug line-clamp-2">
+        <a href={`#/product/${product.id}`} className="hover:text-primary transition-colors">
+          {product.title_ka}
+        </a>
+      </h3>
     </article>
   )
 }
 
 function EmptyState() {
-  const t = useT()
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
       <span className="material-symbols-outlined text-outline text-5xl mb-4">search_off</span>
-      <p className="text-secondary">{t('catalog.empty')}</p>
+      <p className="text-base text-secondary">პროდუქტები ვერ მოიძებნა</p>
     </div>
   )
 }
@@ -291,14 +354,11 @@ function EmptyState() {
 function CatalogSkeleton() {
   return (
     <>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="border border-outline-variant rounded bg-white overflow-hidden">
-          <div className="aspect-[4/3] skeleton-shimmer" />
-          <div className="p-4 space-y-3">
-            <div className="h-3 w-16 skeleton-shimmer rounded" />
-            <div className="h-4 w-3/4 skeleton-shimmer rounded" />
-            <div className="h-5 w-20 skeleton-shimmer rounded" />
-          </div>
+      {Array.from({ length: 9 }).map((_, i) => (
+        <div key={i}>
+          <div className="w-full aspect-square skeleton-shimmer mb-3" />
+          <div className="h-5 w-16 skeleton-shimmer rounded mb-2" />
+          <div className="h-4 w-3/4 skeleton-shimmer rounded" />
         </div>
       ))}
     </>
@@ -306,41 +366,43 @@ function CatalogSkeleton() {
 }
 
 function Pagination({ page, totalPages, onChange }) {
-  // Declared before the early return: hooks must run in the same order on every
-  // render, and this component bails out when there's only one page.
-  const t = useT()
   if (totalPages <= 1) return null
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+
+  const box =
+    'w-10 h-10 rounded-[6px] flex items-center justify-center text-[14px] font-medium transition-colors'
+
   return (
-    <div className="mt-16 flex justify-center items-center gap-3">
+    <div className="flex justify-center gap-2 mt-10">
       <button
         onClick={() => onChange(page - 1)}
         disabled={page === 1}
-        aria-label={t('catalog.prevPage')}
-        className="w-9 h-9 flex items-center justify-center rounded border border-outline-variant text-secondary hover:border-on-surface transition-colors disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="წინა გვერდი"
+        className={`${box} border border-outline-variant text-secondary hover:bg-surface-container-high disabled:opacity-40`}
       >
-        <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+        <span className="material-symbols-outlined text-[20px]">chevron_left</span>
       </button>
-      <div className="flex gap-2">
-        {pages.map((p) => (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            className={`w-9 h-9 flex items-center justify-center rounded text-sm font-medium transition-colors ${
-              p === page ? "bg-primary text-on-primary" : "text-secondary hover:bg-surface-container-low"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
+      {pages.map((p) => (
+        <button
+          key={p}
+          onClick={() => onChange(p)}
+          aria-current={p === page ? 'page' : undefined}
+          className={`${box} ${
+            p === page
+              ? 'bg-primary text-white'
+              : 'border border-outline-variant text-secondary hover:bg-surface-container-high'
+          }`}
+        >
+          {p}
+        </button>
+      ))}
       <button
         onClick={() => onChange(page + 1)}
         disabled={page === totalPages}
-        aria-label={t('catalog.nextPage')}
-        className="w-9 h-9 flex items-center justify-center rounded border border-outline-variant text-secondary hover:border-on-surface transition-colors disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="შემდეგი გვერდი"
+        className={`${box} border border-outline-variant text-secondary hover:bg-surface-container-high disabled:opacity-40`}
       >
-        <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+        <span className="material-symbols-outlined text-[20px]">chevron_right</span>
       </button>
     </div>
   )
@@ -348,77 +410,89 @@ function Pagination({ page, totalPages, onChange }) {
 
 export default function Catalog({ initialCategory = null }) {
   const { products, productsLoading } = useStore()
-  // The URL is the single source of truth for the selected category, so the
-  // nav dropdown, the tab row and a pasted link can't disagree. An unknown
-  // category (e.g. a renamed one in an old bookmark) falls back to "all"
-  // rather than rendering an empty page.
   const activeCat = initialCategory && TABS.includes(initialCategory) ? initialCategory : ALL
 
   const setActiveCat = (cat) => {
     window.location.hash = cat === ALL ? '#/catalog' : `#/catalog/${encodeURIComponent(cat)}`
   }
-  const [sortBy, setSortBy] = useState("newest")
-  const [priceRange, setPriceRange] = useState({ min: "", max: "" })
+  const [sortBy, setSortBy] = useState('newest')
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [page, setPage] = useState(1)
+  const [query, setQuery] = useState('')
 
   const visible = useMemo(() => {
-    // No stock filtering: every order is a sourcing *request* rather than a sale
-    // from held inventory, so "out of stock" never applied to this shop.
     let list = products.filter((p) => activeCat === ALL || p.category === activeCat)
-    // With per-size pricing a product spans a range, so it matches the filter
-    // when ANY of its size options falls inside the requested bounds.
-    if (priceRange.min !== "") list = list.filter((p) => maxPrice(p) >= Number(priceRange.min))
-    if (priceRange.max !== "") list = list.filter((p) => minPrice(p) <= Number(priceRange.max))
 
-    // Sort on the "from" price, matching what the card actually shows.
+    const q = query.trim().toLowerCase()
+    if (q) {
+      list = list.filter((p) =>
+        `${p.title_ka ?? ''} ${p.short_description_ka ?? ''}`.toLowerCase().includes(q),
+      )
+    }
+
+    if (priceRange.min !== '') list = list.filter((p) => maxPrice(p) >= Number(priceRange.min))
+    if (priceRange.max !== '') list = list.filter((p) => minPrice(p) <= Number(priceRange.max))
+
     list = [...list]
-    if (sortBy === "price-asc") list.sort((a, b) => minPrice(a) - minPrice(b))
-    else if (sortBy === "price-desc") list.sort((a, b) => minPrice(b) - minPrice(a))
+    if (sortBy === 'price-asc') list.sort((a, b) => minPrice(a) - minPrice(b))
+    else if (sortBy === 'price-desc') list.sort((a, b) => minPrice(b) - minPrice(a))
     else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
     return list
-  }, [products, activeCat, sortBy, priceRange])
+  }, [products, activeCat, sortBy, priceRange, query])
 
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
 
-  // Reset to page 1 whenever the category/sort/price filters change so a
-  // previously-selected page doesn't carry over to a new result set.
   useEffect(() => {
     setPage(1)
-  }, [activeCat, sortBy, priceRange])
+  }, [activeCat, sortBy, priceRange, query])
 
   const shown = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const goToPage = (p) => {
     setPage(Math.min(Math.max(p, 1), totalPages))
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
     <>
       <SiteNav active="catalog" />
-      <main className="min-h-screen px-container-padding py-12 md:py-16 w-full">
-        <CatalogHeader
-          activeCat={activeCat}
-          onChange={setActiveCat}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          priceRange={priceRange}
-          onPriceApply={setPriceRange}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
-          {productsLoading ? (
-            <CatalogSkeleton />
-          ) : shown.length > 0 ? (
-            shown.map((product) => <ProductCard key={product.id} product={product} />)
-          ) : (
-            <EmptyState />
-          )}
-        </div>
-        {!productsLoading && (
-          <Pagination page={page} totalPages={totalPages} onChange={goToPage} />
-        )}
-      </main>
+      <div className="bg-white min-h-screen">
+        <main className="w-full px-6 md:px-container-padding py-8 grid grid-cols-1 md:grid-cols-[17.5rem_minmax(0,1fr)] gap-6 md:gap-8 items-start">
+          <CategorySidebar activeCat={activeCat} onChange={setActiveCat} />
+
+          <section className="flex flex-col gap-4 min-w-0">
+            <SearchBand value={query} onChange={setQuery} />
+
+            <CatalogToolbar
+              activeCat={activeCat}
+              onCategoryChange={setActiveCat}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              priceRange={priceRange}
+              onPriceApply={setPriceRange}
+            />
+
+            <div className="pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+                {productsLoading ? (
+                  <CatalogSkeleton />
+                ) : shown.length > 0 ? (
+                  shown.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))
+                ) : (
+                  <EmptyState />
+                )}
+              </div>
+
+              {!productsLoading && (
+                <Pagination page={page} totalPages={totalPages} onChange={goToPage} />
+              )}
+            </div>
+          </section>
+        </main>
+      </div>
       <Footer />
     </>
   )

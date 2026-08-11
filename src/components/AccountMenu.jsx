@@ -1,23 +1,33 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useT } from '../i18n'
 
 // Shared account control used by both the landing navbar and SiteNav.
-export default function AccountMenu() {
+// `variant="dark"` is for the navy home header — light text on the dark bar.
+export default function AccountMenu({ variant = 'light' }) {
   const { user, profile, loading, openLogin, signOut } = useAuth()
-  const t = useT()
   const [open, setOpen] = useState(false)
+  const dark = variant === 'dark'
 
-  if (loading) return <span className="material-symbols-outlined text-on-surface-variant">person</span>
+  if (loading) {
+    return (
+      <span className={`material-symbols-outlined ${dark ? 'text-white/70' : 'text-on-surface-variant'}`}>
+        person
+      </span>
+    )
+  }
 
   if (!user) {
     return (
       <button
         onClick={openLogin}
-        className="font-label-sm text-label-sm normal-case tracking-normal text-on-surface border border-outline-variant px-3 py-1.5 rounded transition-colors hover:border-primary hover:text-primary flex items-center gap-2"
+        className={`font-label-sm text-label-sm normal-case tracking-normal px-3 py-1.5 rounded transition-colors flex items-center gap-2 ${
+          dark
+            ? 'text-white border border-white/30 hover:border-white hover:bg-white/10'
+            : 'text-on-surface border border-outline-variant hover:border-primary hover:text-primary'
+        }`}
       >
         <span className="material-symbols-outlined text-[18px]">person</span>
-        <span className="hidden sm:inline">{t('account.signIn')}</span>
+        <span className="hidden sm:inline">შესვლა</span>
       </button>
     )
   }
@@ -26,7 +36,9 @@ export default function AccountMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 text-on-surface hover:text-primary transition-colors"
+        className={`flex items-center gap-2 transition-colors ${
+          dark ? 'text-white hover:text-white/90' : 'text-on-surface hover:text-primary'
+        }`}
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
           account_circle
@@ -42,14 +54,14 @@ export default function AccountMenu() {
             href="#/orders"
             className="block px-4 py-3 font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low transition-colors"
           >
-            {t('account.myOrders')}
+            ჩემი შეკვეთები
           </a>
           {profile?.is_admin && (
             <a
               href="#/admin/products"
               className="block px-4 py-3 font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low transition-colors"
             >
-              {t('account.adminPanel')}
+              ადმინ პანელი
             </a>
           )}
           <button
@@ -59,7 +71,7 @@ export default function AccountMenu() {
             }}
             className="w-full text-left px-4 py-3 font-label-sm text-label-sm text-error hover:bg-surface-container-low transition-colors"
           >
-            {t('account.signOut')}
+            გასვლა
           </button>
         </div>
       )}

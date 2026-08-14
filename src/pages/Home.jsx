@@ -5,6 +5,7 @@ import CategoryStrip from '../components/CategoryStrip'
 import ABOUT_IMG from '../assets/newlogo.jpg'
 import { useAuth } from '../context/AuthContext'
 import { useStore } from '../store'
+import { whatsappHref } from '../lib/whatsapp'
 import Footer from '../components/Footer'
 
 // Hero is served from /public. The about image is imported from src/assets so
@@ -209,7 +210,7 @@ function About() {
             სწრაფი და დეტალური პასუხისთვის კონკრეტული პროდუქტის შესახებ მომწერეთ
             ვაცაპზე{' '}
             <a
-              href="https://wa.me/995557783549"
+              href={whatsappHref(navigator.userAgent)}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-primary hover:underline whitespace-nowrap"

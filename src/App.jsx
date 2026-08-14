@@ -3,6 +3,7 @@ import { StoreProvider } from './store'
 import { AuthProvider } from './context/AuthContext'
 import AuthModal from './components/AuthModal'
 import OpenInBrowserBar from './components/OpenInBrowserBar'
+import WhatsAppButton from './components/WhatsAppButton'
 import RouteGuard from './components/RouteGuard'
 import Home from './pages/Home'
 import Catalog from './pages/Catalog'
@@ -120,6 +121,7 @@ export default function App() {
       <StoreProvider>
         <Router />
         <AuthModal />
+        <WhatsAppButton />
         <OpenInBrowserBar />
       </StoreProvider>
     </AuthProvider>

@@ -3,6 +3,15 @@
 Set up August 2026. Google login uses the identical mechanism; only the provider
 name and the credentials differ.
 
+> **Status: configured and verified working, but the button is currently hidden.**
+> Publishing the Meta app requires business verification against a real legal
+> identity, and the shop is not a registered business — so Facebook login only
+> works for accounts holding a role on the Meta app. Rather than show customers a
+> door that fails, the button in `src/components/AuthModal.jsx` is commented out.
+> Everything else — the Meta app, the Supabase provider, the credentials — is left
+> in place, so restoring it is a matter of uncommenting that block. Google needs
+> no equivalent verification, which is why it stayed.
+
 ---
 
 ## 1. The idea

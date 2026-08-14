@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-// Google/Facebook only. There are deliberately no separate "log in" and
-// "register" tabs: with OAuth both do exactly the same thing -- the provider
-// creates the account on first use and signs the person in on every later use
-// -- so two tabs would have been two identical buttons.
+// OAuth only. There are deliberately no separate "log in" and "register" tabs:
+// with OAuth both do exactly the same thing -- the provider creates the account
+// on first use and signs the person in on every later use -- so two tabs would
+// have been two identical buttons.
+//
+// Facebook is configured and working end to end, but its button is commented out
+// below: publishing the Meta app requires business verification against a real
+// legal identity, and the shop isn't a registered business. Until the owner
+// completes that, Facebook login only works for accounts holding a role on the
+// Meta app, so showing the button to customers would offer them a door that
+// fails. Google needs no such verification. See docs/facebook-login.md.
 export default function AuthModal() {
   const { isLoginOpen, closeLogin, oauthSignIn } = useAuth()
   const [error, setError] = useState('')
@@ -67,9 +74,10 @@ export default function AuthModal() {
           <h2 id="auth-modal-title" className="font-headline-lg text-xl text-on-surface">
             შესვლა ან რეგისტრაცია
           </h2>
-          <p className="text-sm text-secondary mt-2">
-            აირჩიეთ ერთი მეთოდი — პაროლის შექმნა არ დაგჭირდებათ
-          </p>
+          {/* Was "აირჩიეთ ერთი მეთოდი — პაროლის შექმნა არ დაგჭირდებათ" while
+              there were two providers to choose between. Restore that wording if
+              the Facebook button below comes back. */}
+          <p className="text-sm text-secondary mt-2">პაროლის შექმნა არ დაგჭირდებათ</p>
         </div>
 
         <div className="space-y-3">
@@ -82,6 +90,10 @@ export default function AuthModal() {
             <span className="material-symbols-outlined text-[18px]">travel_explore</span>
             გაგრძელება Google-ით
           </button>
+          {/* Restore by uncommenting -- nothing else needs changing. The
+              Facebook provider stays enabled in Supabase and `oauthSignIn` is
+              provider-agnostic, so this button is the only thing standing
+              between the current state and working Facebook login.
           <button
             type="button"
             onClick={() => handleOAuth('facebook')}
@@ -91,6 +103,7 @@ export default function AuthModal() {
             <span className="material-symbols-outlined text-[18px]">public</span>
             გაგრძელება Facebook-ით
           </button>
+          */}
         </div>
 
         {busy && <p className="text-secondary text-xs text-center mt-4">იტვირთება...</p>}
